@@ -1,0 +1,60 @@
+services:
+  - docker
+language: java
+jdk:
+  - oraclejdk8
+
+cache:
+  directories:
+    - node
+    - node_modules
+    - $HOME/.m2
+    - $HOME/.sonar/cache
+env:
+  global:
+    - MAVEN_OPTS="-Xmx1G -Xms1G"
+    - SPRING_OUTPUT_ANSI_ENABLED=ALWAYS
+    - SPRING_JPA_SHOW_SQL=false
+    - COMMIT=${TRAVIS_COMMIT::8}
+    - IMAGE_NAME=api-pdf-generator
+    - PACT_BROKER_HOST=pact.attestationlegale.fr
+    - PACT_BROKER_PORT=443
+    - PACT_BROKER_PROTOCOL=https
+
+before_install:
+  - pip install --user awscli # install aws cli w/o sudo
+  - jdk_switcher use oraclejdk8
+  - java -version
+  - export AWS_ACCESS_KEY_ID=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo $AWS_PROD_ACCESS_KEY_ID; else echo $AWS_DEV_ACCESS_KEY_ID ; fi`
+  - export AWS_SECRET_ACCESS_KEY=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo $AWS_PROD_SECRET_ACCESS_KEY; else echo $AWS_DEV_SECRET_ACCESS_KEY ; fi`
+  - eval $(aws ecr get-login --region $AWS_REGION --no-include-email) #needs AWS_REGION AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY envvars
+
+script:
+  - chmod +x mvnw
+  # TODO Reactivate swagger2markup when needed
+#  - ./mvnw clean test sonar:sonar swagger2markup:convertSwagger2markup pact:publish install
+  - ./mvnw clean test pact:publish install
+  - if [[ $TRAVIS_PULL_REQUEST != 'false' ]]; then ./mvnw sonar:sonar -Dsonar.login=$SONAR_LOGIN -Dsonar.password=$SONAR_PASSWORD -Dsonar.github.oauth=$GITHUB_TOKEN -Dsonar.github.repository=$TRAVIS_REPO_SLUG -Dsonar.github.pullRequest=$TRAVIS_PULL_REQUEST -Dsonar.analysis.mode=preview; elif [[ $TRAVIS_BRANCH == 'dev' ]]; then ./mvnw sonar:sonar -Dsonar.login=$SONAR_LOGIN -Dsonar.password=$SONAR_PASSWORD ; fi
+  - ./mvnw package -Pprod -DskipTests
+
+after_success:
+  - if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_BRANCH" == "dev" ]; then ./mvnw versions:display-dependency-updates -DprocessDependencyManagement=false ; fi
+  - export VERSION=`mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec`
+  - export REPO=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo $REGISTRY_PROD_URL; else echo $REGISTRY_DEV_URL ; fi`
+  - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo $VERSION; else echo $VERSION-$TRAVIS_BRANCH | tr '/' '-' ; fi`
+  - docker build -t $IMAGE_NAME:$COMMIT .
+  - docker tag $IMAGE_NAME:$COMMIT $REPO:$TAG
+  - docker tag $IMAGE_NAME:$COMMIT $REPO:latest
+  - docker tag $IMAGE_NAME:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
+  - docker push $REPO:$TAG
+  - docker push $REPO:latest
+  - docker push $REPO:travis-$TRAVIS_BUILD_NUMBER
+  - curl https://raw.githubusercontent.com/AttestationLegale/ecs-deploy/master/ecs-deploy > ecs-deploy
+  - chmod +x ecs-deploy
+  - ./service-deploy
+
+notifications:
+  webhooks:
+    on_success: change  # options: [always|never|change] default: always
+    on_failure: always  # options: [always|never|change] default: always
+    on_start: false     # default: false
