@@ -12,6 +12,7 @@ import org.springframework.security.oauth2.config.annotation.web.configurers.Res
 import org.springframework.security.oauth2.provider.token.DefaultAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 
+import com.onceforall.pdfgenerator.security.AuthoritiesConstants;
 import com.onceforall.pdfgenerator.security.CustomAccessTokenConverter;
 
 @Configuration
@@ -34,8 +35,12 @@ public class MicroserviceSecurityConfiguration extends ResourceServerConfigurerA
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         .and()
             .authorizeRequests()
+            .antMatchers("/api/profile-info").permitAll()
             .antMatchers("/api/**").authenticated()
-            .antMatchers("/management/health").permitAll();
+            .antMatchers("/management/health").permitAll()
+            .antMatchers("/management/logs").authenticated()
+            .antMatchers("/management/**").hasAuthority(AuthoritiesConstants.ADMIN)
+            .antMatchers("/swagger-resources/configuration/ui").permitAll();
     }
 
     /**
@@ -43,7 +48,7 @@ public class MicroserviceSecurityConfiguration extends ResourceServerConfigurerA
      */
 
     @Override
-    public void configure(ResourceServerSecurityConfigurer resources) {
+    public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
         // Set resourceId to NULL to ignore the JWT "aud" field.
         resources.resourceId(null);
     }

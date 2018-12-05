@@ -3,10 +3,10 @@ package com.onceforall.pdfgenerator.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-public class ZipCreationException extends RuntimeException {
+@ResponseStatus(HttpStatus.BAD_REQUEST)
+public class PdfGenerationException extends RuntimeException {
 
-    public ZipCreationException(String message) {
+    public PdfGenerationException(String message) {
         super(message);
     }
 }

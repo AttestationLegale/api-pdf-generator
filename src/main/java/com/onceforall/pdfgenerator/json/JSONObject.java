@@ -1,69 +1,5 @@
 package com.onceforall.pdfgenerator.json;
 
-/*
-Copyright (c) 2002 JSON.org
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-The Software shall be used for Good, not Evil.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
-/*
- * Changes Copyright (c) 2006,2007 John Snyders under the same license terms above.
- * 
- * Added support for dates:
- * Dates will be stored as strings in JSON text using the JavaScript 
- * representation as returned by JavaScript Date.toUTCString. This should be the
- * same as RFC 2822.
- * In JavaScript use the Date.toUTCString to generate the JSON value and
- * Date.parse to convert the JSON value to a Date object.
- * 
- * In Java store the Java Date in JSON array or object.
- * When serializing Dates are converted to JavaScript string representation. 
- * When parsing the JSON value is stored as a string. 
- * There is a getDate accessor method that will convert the string to a Java Date.
- * Yes, this is asymetric! 
- * 
- * Make it StringTemplate friendly by implementing Map.  This requires adding
- * put(String key, JSONObject value) to avoid confusion with put(String key, Map value).
- * It is also necessary to be able to have ST render JSON text when it sees a JSONObject but
- * ST will prefer to treat it as a MAP iterate the values and render each one. Basically
- * in ST renderes only render scalar values and not collections - this is the right thing.
- * The solution is to add a pseudo key "JSONString". $myjsonthing.JSONString$ will 
- * serialize myjsonthing in JSON format.
- * 
- * Refactored common code into method fixupNumberString
- * 
- * Changed null handling. The distinction between undefined and null is not helpful.
- * Specifically it causes problems from StringTemplate which has no knowledge of
- * JSONObject.NULL. Values that are undefined are not serialized to JSON format. So
- * all that can go between JavaScript and Java (or any other platform) is null. While
- * there is some semantic difference between null in JavaScript and Java it makes the
- * most sense to map one to the other. 
- * 
- * In JSONObject(Map map) constructor make sure incomming map does not have 
- * null or non string keys. Ignore the entries that do.
- * 
- * Made changes to exception handling
- * 
- * TODO remove flexible parsing?
- */
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
@@ -127,9 +63,9 @@ import java.io.Writer;
  * <li>Comments written in the slashshlash, slashstar, and hash conventions
  *     will be ignored.</li>
  * </ul>
- * @author JSON.org
  * @version 2
  */
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class JSONObject implements Map {
 
     /**

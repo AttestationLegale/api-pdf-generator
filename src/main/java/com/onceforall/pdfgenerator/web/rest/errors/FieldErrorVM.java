@@ -2,6 +2,9 @@ package com.onceforall.pdfgenerator.web.rest.errors;
 
 import java.io.Serializable;
 
+import com.onceforall.pdfgenerator.config.DataClass;
+
+@DataClass
 public class FieldErrorVM implements Serializable {
 
     private static final long serialVersionUID = 1L;

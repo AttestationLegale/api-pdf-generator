@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 
 /**
  * Custom access converter
- * Created by michael on 15/06/17.
  */
 public class CustomAccessTokenConverter extends DefaultAccessTokenConverter {
 

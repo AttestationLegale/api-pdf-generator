@@ -1,51 +1,5 @@
 package com.onceforall.pdfgenerator.json;
 
-/*
-Copyright (c) 2002 JSON.org
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-The Software shall be used for Good, not Evil.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
-/*
- * Changes Copyright (c) 2006,2007 John Snyders under the same license terms above.
- *
- * Added support for dates. See JSONObject
- *
- * Make it StringTemplate friendly by implementing Collection. This requires adding
- * specific put methods that take JSONObject and JSONArray to avoid confusion with
- * Map and Collection.
- *
- * Want the ability to have ST render JSON text when it sees a JSONArray but
- * ST will prefer to treat it as a Collection iterate the values and render each one.
- * The getJSONString property allows ST to get the serialized string as the JSONString property.
- *
- * Removed JSONObject.NULL. See JSONObject for details.
- * 
- * Removed opt* methods. I don't see a need for them since it is now OK to store
- * nulls in the array.
- * 
- * Made changes to exception handling
- * 
- * TODO remove flexible parsing?
- */
 import java.io.IOException;
 import java.io.Writer;
 import java.text.ParseException;
@@ -98,9 +52,9 @@ import java.util.Map;
  *     will be ignored.</li>
  * </ul>
 
- * @author JSON.org
  * @version 2
  */
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class JSONArray implements Collection, Iterable {
 
     /**
@@ -127,7 +81,8 @@ public class JSONArray implements Collection, Iterable {
      * @param x A JSONTokener
      * @throws JSONException If there is a syntax error.
      */
-    public JSONArray(JSONTokener x) {
+    
+	public JSONArray(JSONTokener x) {
         this();
         if (x.nextClean() != '[') {
             throw x.syntaxError("A JSONArray text must start with '['");

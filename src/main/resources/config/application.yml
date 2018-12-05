@@ -14,21 +14,6 @@
 # http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 # ===================================================================
 
-feign:
-    security:
-        enabled: true
-    hystrix:
-        enabled: true
-
-# See https://github.com/Netflix/Hystrix/wiki/Configuration
-hystrix:
-    command:
-        default:
-            execution:
-                isolation:
-                    thread:
-                        timeoutInMilliseconds: 5000
-
 management:
     endpoints:
         web:
@@ -41,107 +26,12 @@ management:
     info:
         git:
             mode: full
-    health:
-        mail:
-            enabled: false # When using the MailService, configure an SMTP server and set this to true
-    metrics:
-        enabled: false # http://micrometer.io/ is disabled by default, as we use http://metrics.dropwizard.io/ instead
 
 spring:
     application:
-        name: ecm
+        name: pdf-generator
     jackson:
-        serialization.write_dates_as_timestamps: false
-    jpa:
-        open-in-view: false
-        hibernate:
-            ddl-auto: none
-            naming:
-                physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
-                implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
-    messages:
-        basename: i18n/messages
-    mvc:
-        favicon:
-            enabled: false
-    thymeleaf:
-        mode: HTML
-    cloud:
-        stream:
-            rabbit:
-                bindings:
-                    intervention:
-                        consumer:
-                            bindingRoutingKey: intervention.#
-                            durableSubscription: true
-                            exchangeType : topic
-                            autoBindDlq: true
-                            dlqTtl: 200000
-                            dlqDeadLetterExchange: intervention
-                    project:
-                        consumer:
-                            bindingRoutingKey: project.updated
-                            durableSubscription: true
-                            exchangeType : topic
-                            autoBindDlq: true
-                            dlqTtl: 200000
-                            dlqDeadLetterExchange: project
-                    organisationCreated:
-                        consumer:
-                            bindingRoutingKey: organisation.created
-                            durableSubscription: true
-                            exchangeType : topic
-                            autoBindDlq: true
-                            deadLetterExchange: organisation.dead
-                            deadLetterRoutingKey: organisation.created
-                            dlqTtl: 200000
-                            dlqDeadLetterExchange: organisation
-                    organisationUpdated:
-                        consumer:
-                            bindingRoutingKey: organisation.updated
-                            durableSubscription: true
-                            exchangeType : topic
-                            autoBindDlq: true
-                            deadLetterExchange: organisation.dead
-                            deadLetterRoutingKey: organisation.updated
-                            dlqTtl: 200000
-                            dlqDeadLetterExchange: organisation
-                    relationship:
-                        consumer:
-                            bindingRoutingKey: relationship.#
-                            durableSubscription: true
-                            exchangeType : topic
-                            autoBindDlq: true
-                            dlqTtl: 200000
-                            dlqDeadLetterExchange: relationship
-                    depositorServiceActivated:
-                        producer:
-                            exchangeType : topic
-                            routingKeyExpression : headers.entity.concat('.').concat(headers.operation)
-            bindings:
-                organisationCreated:
-                    destination: organisation
-                    group: ecm.created
-                    content-type: application/json
-                organisationUpdated:
-                    destination: organisation
-                    group: ecm.updated
-                    content-type: application/json
-                intervention:
-                    destination: project
-                    group: ecm.intervention
-                    content-type: application/json
-                project:
-                    destination: project
-                    group: ecm
-                    content-type: application/json
-                relationship:
-                    destination: relationship
-                    group: ecm
-                    content-type: application/json
-                depositorServiceActivated:
-                    content-type: application/json
-                    destination: ecm
+        serialization.write_dates_as_timestamps: false   
     servlet:
         multipart:
             maxFileSize: 15MB
@@ -154,11 +44,6 @@ security:
         resource:
             filter-order: 3
 
-server:
-    session:
-        cookie:
-            http-only: true
-
 
 # ===================================================================
 # JHipster specific properties
@@ -167,10 +52,6 @@ server:
 # ===================================================================
 
 jhipster:
-    async:
-        core-pool-size: 2
-        max-pool-size: 50
-        queue-capacity: 10000
     cors:
         allowed-origins: "*"
         allowed-methods: GET, PUT, POST, DELETE, OPTIONS, PATCH
@@ -179,18 +60,7 @@ jhipster:
         allow-credentials: true
         max-age: 1800
     mail:
-        from: ecm@localhost
-    swagger:
-        default-include-pattern: /api/.*
-        title: ecm API
-        description: ecm API documentation
-        version: 0.0.1
-        terms-of-service-url:
-        contact-name:
-        contact-url:
-        contact-email:
-        license:
-        license-url:
+        from: pdf-generator@localhost
 
 # ===================================================================
 # Application specific properties
@@ -202,16 +72,4 @@ jhipster:
 # ===================================================================
 
 application:
-    amqp:
-        max-retries: 10
-
-nuxeo:
-    nuxeo-base-folder: /default-domain/workspaces
-    ofa-base-folder: OnceForAll # Base folder for OFA in the Nuxeo base folder
-    server:
-        connect-url: http://localhost:8080/nuxeo
-        timeout: 60
-        cache-enabled: false
-    credentials:
-        login: ofa-admin
-        password: admin
+  

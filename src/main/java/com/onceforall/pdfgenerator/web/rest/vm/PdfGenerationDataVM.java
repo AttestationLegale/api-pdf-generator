@@ -11,13 +11,16 @@ public class PdfGenerationDataVM {
     public String jsonData;
     @NotNull
     public String template;
-
+    @NotNull
+    public String i18nData;
+    
     public PdfGenerationDataVM() {
         // used by Jackson
     }
 
-    public PdfGenerationDataVM(String jsonData, String template, String css) {
+    public PdfGenerationDataVM(String jsonData, String template, String i18nData) {
         this.jsonData = jsonData;
         this.template = template;
+        this.i18nData = i18nData;
     }
 }
