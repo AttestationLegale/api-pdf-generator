@@ -2,6 +2,7 @@ package com.onceforall.pdfgenerator.service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,8 +26,8 @@ public class PdfService {
     	this.baseUri = baseUri;
     }
 
-    public ByteArrayOutputStream generate(String template, String jsonData, String i18nData) {
-
+    public ByteArrayOutputStream generate(String template, Map<String, Object> jsonData, Map<String, Object> i18nData) {
+    	   
     	ST stringTemplate = new ST(template, '$', '$');
     	stringTemplate.add("data", new JSONObject(jsonData));
     	stringTemplate.add("i18n", new JSONObject(i18nData));

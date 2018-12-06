@@ -44,7 +44,7 @@ public class PdfResource {
         
     	ByteArrayOutputStream baos = pdfService.generate(pdfGenerationData.template, pdfGenerationData.jsonData, pdfGenerationData.i18nData);  
     	
-        response.setContentType("Content-Type: text/html; charset=UTF-8");
+        response.setContentType("text/html");
         response.addHeader(
             "Content-Disposition",
             "attachment; filename=generated.pdf");
