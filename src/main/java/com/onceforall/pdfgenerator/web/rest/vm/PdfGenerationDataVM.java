@@ -10,19 +10,19 @@ import com.onceforall.pdfgenerator.config.DataClass;
 public class PdfGenerationDataVM {
 
     @NotNull
-    public Map<String, Object> jsonData;
+    public Map<String, Object> data;
     @NotNull
     public String template;
     @NotNull
-    public Map<String, Object> i18nData;
+    public Map<String, Object> i18n;
     
     public PdfGenerationDataVM() {
         // used by Jackson
     }
 
-    public PdfGenerationDataVM(Map<String, Object> jsonData, String template, Map<String, Object> i18nData) {
-        this.jsonData = jsonData;
+    public PdfGenerationDataVM(Map<String, Object> data, String template, Map<String, Object> i18n) {
+        this.data = data;
         this.template = template;
-        this.i18nData = i18nData;
+        this.i18n = i18n;
     }
 }

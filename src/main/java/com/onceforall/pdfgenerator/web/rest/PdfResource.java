@@ -42,7 +42,7 @@ public class PdfResource {
     @ResponseStatus(HttpStatus.OK)
     public void generate(HttpServletResponse response, @RequestBody PdfGenerationDataVM pdfGenerationData) throws IOException, JSONException {
         
-    	ByteArrayOutputStream baos = pdfService.generate(pdfGenerationData.template, pdfGenerationData.jsonData, pdfGenerationData.i18nData);  
+    	ByteArrayOutputStream baos = pdfService.generate(pdfGenerationData.template, pdfGenerationData.data, pdfGenerationData.i18n);  
     	
         response.setContentType("text/html");
         response.addHeader(
