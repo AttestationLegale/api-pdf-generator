@@ -6,6 +6,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -40,7 +41,7 @@ public class PdfResource {
 
     @PostMapping(value = "/generate", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.OK)
-    public void generate(HttpServletResponse response, @RequestBody PdfGenerationDataVM pdfGenerationData) throws IOException, JSONException {
+    public void generate(HttpServletResponse response, @Valid @RequestBody PdfGenerationDataVM pdfGenerationData) throws IOException, JSONException {
         
     	ByteArrayOutputStream baos = pdfService.generate(pdfGenerationData.template, pdfGenerationData.data, pdfGenerationData.i18n);  
     	

@@ -26,11 +26,14 @@ public class PdfService {
     	this.baseUri = baseUri;
     }
 
-    public ByteArrayOutputStream generate(String template, Map<String, Object> jsonData, Map<String, Object> i18nData) {
-    	   
+    public ByteArrayOutputStream generate(String template, Map<String, Object> data, Map<String, Object> i18n) {
+    	  
+    	LOGGER.debug(String.valueOf(data.keySet().size()));
+    	LOGGER.debug(String.valueOf(i18n.keySet().size()));
+    	
     	ST stringTemplate = new ST(template, '$', '$');
-    	stringTemplate.add("data", new JSONObject(jsonData));
-    	stringTemplate.add("i18n", new JSONObject(i18nData));
+    	stringTemplate.add("data", new JSONObject(data));
+    	stringTemplate.add("i18n", new JSONObject(i18n));
     	
     	String html = stringTemplate.render();
     	LOGGER.debug("Generated html : \n" + html);
