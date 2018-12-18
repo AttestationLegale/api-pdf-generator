@@ -31,27 +31,23 @@ before_install:
 
 script:
   - chmod +x mvnw
-  # TODO Reactivate swagger2markup when needed
-#  - ./mvnw clean test sonar:sonar swagger2markup:convertSwagger2markup pact:publish install
   - ./mvnw clean test pact:publish install
   - if [[ $TRAVIS_PULL_REQUEST != 'false' ]]; then ./mvnw sonar:sonar -Dsonar.login=$SONAR_LOGIN -Dsonar.password=$SONAR_PASSWORD -Dsonar.github.oauth=$GITHUB_TOKEN -Dsonar.github.repository=$TRAVIS_REPO_SLUG -Dsonar.github.pullRequest=$TRAVIS_PULL_REQUEST -Dsonar.analysis.mode=preview; elif [[ $TRAVIS_BRANCH == 'dev' ]]; then ./mvnw sonar:sonar -Dsonar.login=$SONAR_LOGIN -Dsonar.password=$SONAR_PASSWORD ; fi
   - ./mvnw package -Pprod -DskipTests
+  - docker build -t $IMAGE_NAME:$COMMIT .
 
 after_success:
   - if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_BRANCH" == "dev" ]; then ./mvnw versions:display-dependency-updates -DprocessDependencyManagement=false ; fi
-  - export VERSION=`mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec`
-  - export REPO=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo $REGISTRY_PROD_URL; else echo $REGISTRY_DEV_URL ; fi`
-  - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo $VERSION; else echo $VERSION-$TRAVIS_BRANCH | tr '/' '-' ; fi`
-  - docker build -t $IMAGE_NAME:$COMMIT .
-  - docker tag $IMAGE_NAME:$COMMIT $REPO:$TAG
-  - docker tag $IMAGE_NAME:$COMMIT $REPO:latest
-  - docker tag $IMAGE_NAME:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
-  - docker push $REPO:$TAG
-  - docker push $REPO:latest
-  - docker push $REPO:travis-$TRAVIS_BUILD_NUMBER
-  - curl https://raw.githubusercontent.com/AttestationLegale/ecs-deploy/master/ecs-deploy > ecs-deploy
-  - chmod +x ecs-deploy
-  - ./service-deploy
+
+deploy:
+  - provider: script
+    script: bash service-deploy
+    on:
+      branch: dev
+  - provider: script
+    script: bash service-deploy
+    on:
+      branch: master
 
 notifications:
   webhooks:

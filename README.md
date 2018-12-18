@@ -1,4 +1,4 @@
-# ecm
+# pdf-generator
 This application was generated using JHipster 4.5.3, you can find documentation and help at [https://jhipster.github.io/documentation-archive/v4.5.3](https://jhipster.github.io/documentation-archive/v4.5.3).
 
 This is a "microservice" application intended to be part of a microservice architecture, please refer to the [Doing microservices with JHipster][] page of the documentation for more information.
@@ -27,7 +27,7 @@ will generate few files:
     update src/main/webapp/app/app.module.ts
 
 
-To optimize the ecm application for production, run:
+To optimize the pdf-generator application for production, run:
 
     ./mvnw -Pprod clean package
 
