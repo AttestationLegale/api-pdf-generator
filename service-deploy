@@ -1,13 +1,23 @@
 #! /bin/bash
-# Deploy only if it's not a pull request
-if [ -z "$TRAVIS_PULL_REQUEST" ] || [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
-  if [ "$TRAVIS_BRANCH" == "dev" ]; then
-      echo "Deploying $TRAVIS_BRANCH on $SERVICE_DEV (tag: $REPO:$TAG)"
-      ./ecs-deploy -n $SERVICE_DEV -c $CLUSTER_DEV -i $REPO:$TAG -r $AWS_REGION -k $AWS_ECS_DEV_DEPLOYER_ACCESS_KEY_ID -s $AWS_ECS_DEV_DEPLOYER_SECRET_ACCESS_KEY
-    elif [ "$TRAVIS_BRANCH" == "master" ]; then
-      echo "Deploying $TRAVIS_BRANCH on $SERVICE_PROD (tag: $REPO:$TAG)"
-      ./ecs-deploy -n $SERVICE_PROD -c $CLUSTER_PROD -i $REPO:$TAG -r $AWS_REGION -k $AWS_ECS_PROD_DEPLOYER_ACCESS_KEY_ID -s $AWS_ECS_PROD_DEPLOYER_SECRET_ACCESS_KEY
-    fi
-else
-  echo "Skipping deploy because it's a PR"
+
+export VERSION=`mvn -q -Dexec.executable="echo" -Dexec.args='${dollar}{project.version}' --non-recursive exec:exec`
+export REPO=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo $REGISTRY_PROD_URL; else echo $REGISTRY_DEV_URL ; fi`
+export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo $VERSION; else echo $VERSION-$TRAVIS_BRANCH | tr '/' '-' ; fi`
+docker tag $IMAGE_NAME:$COMMIT $REPO:$TAG
+docker tag $IMAGE_NAME:$COMMIT $REPO:latest
+docker tag $IMAGE_NAME:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
+docker push $REPO:$TAG
+docker push $REPO:latest
+docker push $REPO:travis-$TRAVIS_BUILD_NUMBER
+curl https://raw.githubusercontent.com/AttestationLegale/ecs-deploy/master/ecs-deploy > ecs-deploy
+chmod +x ecs-deploy
+
+if [ "$TRAVIS_BRANCH" == "dev" ]; then
+    echo "Deploying $TRAVIS_BRANCH on $SERVICE_DEV (tag: $REPO:$TAG)"
+    ./ecs-deploy -n $SERVICE_DEV -c $CLUSTER_DEV -i $REPO:$TAG -r $AWS_REGION -k $AWS_ECS_DEV_DEPLOYER_ACCESS_KEY_ID -s $AWS_ECS_DEV_DEPLOYER_SECRET_ACCESS_KEY
+elif [ "$TRAVIS_BRANCH" == "master" ]; then
+    echo "Deploying $TRAVIS_BRANCH on $SERVICE_PROD (tag: $REPO:$TAG)"
+    ./ecs-deploy -n $SERVICE_PROD -c $CLUSTER_PROD -i $REPO:$TAG -r $AWS_REGION -k $AWS_ECS_PROD_DEPLOYER_ACCESS_KEY_ID -s $AWS_ECS_PROD_DEPLOYER_SECRET_ACCESS_KEY
 fi
+
+echo "Deploying $TRAVIS_BRANCH on $SERVICE_DEV done !"
