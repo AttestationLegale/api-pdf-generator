@@ -1,0 +1,118 @@
+# ===================================================================
+# Spring Boot configuration for the "dev" profile.
+#
+# This configuration overrides the application.yml file.
+#
+# More information on profiles: https://jhipster.github.io/profiles/
+# More information on configuration properties: https://jhipster.github.io/common-application-properties/
+# ===================================================================
+
+# ===================================================================
+# Standard Spring Boot properties.
+# Full reference is available at:
+# http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
+# ===================================================================
+
+spring:
+    profiles:
+        active: dev
+        include: swagger
+    devtools:
+        restart:
+            enabled: true
+        livereload:
+            enabled: false # we use gulp + BrowserSync for livereload
+    jackson:
+        serialization.indent_output: true
+    messages:
+        cache-seconds: 1
+    thymeleaf:
+        cache: false
+    zipkin: # Use the "zipkin" Maven profile to have the Spring Cloud Zipkin dependencies
+        base-url: http://localhost:9411
+        enabled: false
+        locator:
+            discovery:
+                enabled: true
+    http:
+        multipart:
+            max-file-size: 15MB
+            max-request-size: 15MB
+
+security:
+    oauth2:
+        client:
+            access-token-uri:
+            user-authorization-uri:
+        resource:
+            token-info-uri:
+            user-info-uri:
+            jwt:
+                key-value:
+                    -----BEGIN PUBLIC KEY-----
+                    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAq88ihXLOy8fo6KDEXOdMOhgmccy/Tu6cV8zF27P7sN1NChAKVP9PT4QhFnqsEtTw0pXaQRTkplT0ajBqOUdzPR9MLFcTLdu1j2Uh4vVvFtpRSUPlnDcw3EnwkEsoZ7qds5Dc2XqssYKUkJak6rwOTH6KpMfBBFntZuUt8XfClM09N6mDBUPXgD76b88bWPDMDs50Cj0pttRENDt8CEC/Wxt3RcQjO1tBLmXZODmaVye1+dRT/H9rDf1oL2PGE7szLXKjBi/H0faHzV75hVrad3ndQfYpUjk/1FOR8wQAPNZNEeCMJ/t9ZWWImIOxU00TtsgnRgMR51GzzykRLQhrLwIDAQAB
+                    -----END PUBLIC KEY-----
+
+# ===================================================================
+# To enable SSL, generate a certificate using:
+# keytool -genkey -alias ecm -storetype PKCS12 -keyalg RSA -keysize 2048 -keystore keystore.p12 -validity 3650
+#
+# You can also use Let's Encrypt:
+# https://maximilian-boehm.com/hp2121/Create-a-Java-Keystore-JKS-from-Let-s-Encrypt-Certificates.htm
+#
+# Then, modify the server.ssl properties so your "server" configuration looks like:
+#
+# server:
+#    port: 8443
+#    ssl:
+#        key-store: keystore.p12
+#        key-store-password: <your-password>
+#        keyStoreType: PKCS12
+#        keyAlias: ecm
+# ===================================================================
+server:
+    port: 8092
+
+# ===================================================================
+# JHipster specific properties
+#
+# Full reference is available at: https://jhipster.github.io/common-application-properties/
+# ===================================================================
+
+jhipster:
+    http:
+        version: V_1_1 # To use HTTP/2 you will need SSL support (see above the "server.ssl" configuration)
+    # CORS is only enabled by default with the "dev" profile, so BrowserSync can access the API
+    cors:
+        allowed-origins: "*"
+        allowed-methods: GET, PUT, POST, DELETE, OPTIONS, PATCH
+        allowed-headers: "*"
+        exposed-headers: "X-Total-Count"
+        allow-credentials: true
+        max-age: 1800
+    security:
+        client-authorization:
+            access-token-uri: https://identity.preprod.onceforall.com/auth/realms/OnceForAll/protocol/openid-connect/token
+            client-id: ofa
+            client-secret: afd07983-fd1f-4a60-aca5-71d8b57090e8
+    mail: # specific JHipster mail property, for standard properties see MailProperties
+        from: pdf-generator@localhost
+        base-url: http://127.0.0.1:8085
+    logging:
+        logstash: # Forward logs to logstash over a socket, used by LoggingConfiguration
+            enabled: false
+            host: localhost
+            port: 5000
+            queue-size: 512
+
+# ===================================================================
+# Application specific properties
+# Add your own application properties here, see the ApplicationProperties class
+# to have type-safe configuration, like in the JHipsterProperties above
+#
+# More documentation is available at:
+# https://jhipster.github.io/common-application-properties/
+# ===================================================================
+
+application:
+      base-uri: file:///home/gmonteils/tmp/ 
