@@ -12,7 +12,6 @@ docker push $REPO:travis-$TRAVIS_BUILD_NUMBER
 curl https://raw.githubusercontent.com/AttestationLegale/ecs-deploy/master/ecs-deploy > ecs-deploy
 chmod +x ecs-deploy
 
-# Deploy only if it's not a pull request
 if [ "$TRAVIS_BRANCH" == "dev" ]; then
     echo "Deploying $TRAVIS_BRANCH on $SERVICE_DEV (tag: $REPO:$TAG)"
     ./ecs-deploy -n $SERVICE_DEV -c $CLUSTER_DEV -i $REPO:$TAG -r $AWS_REGION -k $AWS_ECS_DEV_DEPLOYER_ACCESS_KEY_ID -s $AWS_ECS_DEV_DEPLOYER_SECRET_ACCESS_KEY
