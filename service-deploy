@@ -1,6 +1,6 @@
 #! /bin/bash
 
-export VERSION=`mvn -q -Dexec.executable="echo" -Dexec.args='${dollar}{project.version}' --non-recursive exec:exec`
+export VERSION=`mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec`
 export REPO=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo $REGISTRY_PROD_URL; else echo $REGISTRY_DEV_URL ; fi`
 export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo $VERSION; else echo $VERSION-$TRAVIS_BRANCH | tr '/' '-' ; fi`
 docker tag $IMAGE_NAME:$COMMIT $REPO:$TAG
