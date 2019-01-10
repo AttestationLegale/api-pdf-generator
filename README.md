@@ -1,4 +1,6 @@
 # pdf-generator
+The documentation is available here: https://confluence.attestationlegale.fr/display/OFA/PDF+Generator
+
 This application was generated using JHipster 4.5.3, you can find documentation and help at [https://jhipster.github.io/documentation-archive/v4.5.3](https://jhipster.github.io/documentation-archive/v4.5.3).
 
 This is a "microservice" application intended to be part of a microservice architecture, please refer to the [Doing microservices with JHipster][] page of the documentation for more information.
