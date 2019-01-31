@@ -17,9 +17,6 @@ env:
     - SPRING_JPA_SHOW_SQL=false
     - COMMIT=${TRAVIS_COMMIT::8}
     - IMAGE_NAME=api-pdf-generator
-    - PACT_BROKER_HOST=pact.attestationlegale.fr
-    - PACT_BROKER_PORT=443
-    - PACT_BROKER_PROTOCOL=https
 
 before_install:
   - pip install --user awscli # install aws cli w/o sudo
@@ -31,7 +28,7 @@ before_install:
 
 script:
   - chmod +x mvnw
-  - ./mvnw clean test pact:publish install
+  - ./mvnw clean test install
   - if [[ $TRAVIS_PULL_REQUEST != 'false' ]]; then ./mvnw sonar:sonar -Dsonar.login=$SONAR_LOGIN -Dsonar.password=$SONAR_PASSWORD -Dsonar.github.oauth=$GITHUB_TOKEN -Dsonar.github.repository=$TRAVIS_REPO_SLUG -Dsonar.github.pullRequest=$TRAVIS_PULL_REQUEST -Dsonar.analysis.mode=preview; elif [[ $TRAVIS_BRANCH == 'dev' ]]; then ./mvnw sonar:sonar -Dsonar.login=$SONAR_LOGIN -Dsonar.password=$SONAR_PASSWORD ; fi
   - ./mvnw package -Pprod -DskipTests
   - docker build -t $IMAGE_NAME:$COMMIT .
