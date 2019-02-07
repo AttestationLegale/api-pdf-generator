@@ -103,7 +103,10 @@ jobs:
   - stage: deploy-stg
     name: "Deploy to STG"
     if: type != pull_request AND branch = stg
-    install: skip
+    install:
+      - pip show awscli || pip install --user awscli # install aws cli w/o sudo only if necessary
+      - export AWSCLI_PATH=$(pip show awscli | grep Location | awk -F " " '{print $2}')
+      - export PATH=$PATH:$AWSCLI_PATH
     script:
       - ./mvnw package -Pprod -DskipTests
       - docker build -t $IMAGE_NAME:$COMMIT .
@@ -123,7 +126,10 @@ jobs:
   - stage: deploy-prod
     name: "Deploy to PROD"
     if: type != pull_request AND branch = master
-    install: skip
+    install:
+      - pip show awscli || pip install --user awscli # install aws cli w/o sudo only if necessary
+      - export AWSCLI_PATH=$(pip show awscli | grep Location | awk -F " " '{print $2}')
+      - export PATH=$PATH:$AWSCLI_PATH
     before_script:
       - export VERSION=`mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec`
     script: 
