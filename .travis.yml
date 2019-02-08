@@ -1,15 +1,19 @@
+dist: xenial
+
 services:
   - docker
 language: java
 jdk:
-  - oraclejdk8
+  - openjdk8
 
 cache:
+  pip: true
   directories:
-    - node
-    - node_modules
     - $HOME/.m2
     - $HOME/.sonar/cache
+    - ".git-crypt/tmp/"
+    - $HOME/.cache/pip
+    - $HOME/.local
 env:
   global:
     - MAVEN_OPTS="-Xmx1G -Xms1G"
@@ -17,37 +21,135 @@ env:
     - SPRING_JPA_SHOW_SQL=false
     - COMMIT=${TRAVIS_COMMIT::8}
     - IMAGE_NAME=api-pdf-generator
-    - PACT_BROKER_HOST=pact.attestationlegale.fr
-    - PACT_BROKER_PORT=443
-    - PACT_BROKER_PROTOCOL=https
+    - SERVICE_STG=com-ofa-stg-api-pdf-generator
+    - SERVICE_PROD=com-ofa-prod-api-pdf-generator
+    - CLUSTER_STG=com-ofa-stg-ecs-cluster
 
-before_install:
-  - pip install --user awscli # install aws cli w/o sudo
-  - jdk_switcher use oraclejdk8
-  - java -version
-  - export AWS_ACCESS_KEY_ID=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo $AWS_PROD_ACCESS_KEY_ID; else echo $AWS_DEV_ACCESS_KEY_ID ; fi`
-  - export AWS_SECRET_ACCESS_KEY=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo $AWS_PROD_SECRET_ACCESS_KEY; else echo $AWS_DEV_SECRET_ACCESS_KEY ; fi`
-  - eval $(aws ecr get-login --region $AWS_REGION --no-include-email) #needs AWS_REGION AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY envvars
+stages:
+  # - precache # create cache for all stages; to enable only if next stages have several jobs to be executed in parallel
+  - name: test-and-deploy-int # execute test and deploy INT environment
+    if: branch != stg AND branch != master
+  - name: deploy-stg
+    if: branch = stg
+  - name: deploy-prod
+    if: type != pull_request AND branch = master
 
-script:
-  - chmod +x mvnw
-  - ./mvnw clean test pact:publish install
-  - if [[ $TRAVIS_PULL_REQUEST != 'false' ]]; then ./mvnw sonar:sonar -Dsonar.login=$SONAR_LOGIN -Dsonar.password=$SONAR_PASSWORD -Dsonar.github.oauth=$GITHUB_TOKEN -Dsonar.github.repository=$TRAVIS_REPO_SLUG -Dsonar.github.pullRequest=$TRAVIS_PULL_REQUEST -Dsonar.analysis.mode=preview; elif [[ $TRAVIS_BRANCH == 'dev' ]]; then ./mvnw sonar:sonar -Dsonar.login=$SONAR_LOGIN -Dsonar.password=$SONAR_PASSWORD ; fi
-  - ./mvnw package -Pprod -DskipTests
-  - docker build -t $IMAGE_NAME:$COMMIT .
+jobs:
+  include:
+  ## Install all dependencies and needed extra packages and set the cache. It will be reused by next stages.
+  # - stage: precache
+  #   name: "Create cache"
+  #   install:
+  #     - pip show awscli || pip install --user awscli # install aws cli w/o sudo only if necessary
+  #     - export AWSCLI_PATH=$(pip show awscli | grep Location | awk -F " " '{print $2}')
+  #     - export PATH=$PATH:$AWSCLI_PATH
+  #     - if [ ! -f  /usr/local/bin/git-crypt ]; then curl -L https://github.com/minrk/git-crypt-bin/releases/download/0.6.0/git-crypt > git-crypt; fi
+  #     - if [ ! -f  /usr/local/bin/git-crypt ]; then echo "128817a63de17a5af03fe69241e453436c6c286c86dd37fb70ed9b3bf7171d7d  git-crypt" | shasum -a 256 -c -; fi
+  #     - if [ ! -f  /usr/local/bin/git-crypt ]; then chmod +x git-crypt; fi
+  #     - if [ ! -f  /usr/local/bin/git-crypt ]; then sudo cp git-crypt /usr/local/bin/; fi
+  #     - ./mvnw package -DskipTests=true -Dmaven.javadoc.skip=true -B -V # Downloading dependencies
+  #   before_script: true
+  #   script: true
+  ## Executes maven and sonar tests for dev and feature branch only
+  - stage: test-and-deploy-int
+    name: "Execute tests and deploy to INT"
+    install: ## If precache stage is prefered, clean "install" and set it to "skip"
+      - pip show awscli || pip install --user awscli # install aws cli w/o sudo only if necessary
+      - export AWSCLI_PATH=$(pip show awscli | grep Location | awk -F " " '{print $2}')
+      - export PATH=$PATH:$AWSCLI_PATH
+      - if [ ! -f  /usr/local/bin/git-crypt ]; then curl -L https://github.com/minrk/git-crypt-bin/releases/download/0.6.0/git-crypt > git-crypt; fi
+      - if [ ! -f  /usr/local/bin/git-crypt ]; then echo "128817a63de17a5af03fe69241e453436c6c286c86dd37fb70ed9b3bf7171d7d  git-crypt" | shasum -a 256 -c -; fi
+      - if [ ! -f  /usr/local/bin/git-crypt ]; then chmod +x git-crypt; fi
+      - if [ ! -f  /usr/local/bin/git-crypt ]; then sudo cp git-crypt /usr/local/bin/; fi
+    script:
+      - ./mvnw clean test
+      ## TODO: implement performance, load and security tests specific to this service
+      # - ./service-performance-test.sh
+      # - ./service-load-test.sh
+      # - ./service-security-test.sh
+      - if [[ $TRAVIS_PULL_REQUEST != 'false' ]]; then ./mvnw sonar:sonar -Dsonar.login=$SONAR_LOGIN -Dsonar.password=$SONAR_PASSWORD -Dsonar.github.oauth=$GITHUB_TOKEN -Dsonar.github.repository=$TRAVIS_REPO_SLUG -Dsonar.github.pullRequest=$TRAVIS_PULL_REQUEST -Dsonar.analysis.mode=preview; elif [[ $TRAVIS_BRANCH == 'dev' ]]; then ./mvnw sonar:sonar -Dsonar.login=$SONAR_LOGIN -Dsonar.password=$SONAR_PASSWORD ; fi
+      - ./mvnw package -Pprod -DskipTests
+      - docker build -t $IMAGE_NAME:$COMMIT .
+    before_deploy:
+      - export VERSION=`mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec`
+    deploy:
+      - provider: script
+        skip_cleanup: true
+        script: ./service-deploy $VERSION-$TRAVIS_BRANCH $REGISTRY_DEV_URL $SERVICE_DEV $CLUSTER_DEV $AWS_ECS_DEV_DEPLOYER_ACCESS_KEY_ID $AWS_ECS_DEV_DEPLOYER_SECRET_ACCESS_KEY
+        on:
+          branch: dev
+          condition: type != pull_request
+    # after_deploy: # Will be executed once deployment is done and successful. If any of those tests fail, travis build will fail and rollback will be executed
+    # TODO: mvn verify might be leveraged for post deployment tests
+    #   - "./performance-tests || (./rollbackService.sh;travis_terminate 1);"
+    #   - "./security-tests || (./rollbackService.sh;travis_terminate 1);"
+    #   - "./sit || (./rollbackService.sh;travis_terminate 1);"
 
-after_success:
-  - if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_BRANCH" == "dev" ]; then ./mvnw versions:display-dependency-updates -DprocessDependencyManagement=false ; fi
+  ## This job is not used for now. Uncomment if needed
+  # - stage: test-and-deploy-int
+  #   name: "Displays dependencies versions"
+  #   if: type != pull_request AND branch = dev
+  #   install: skip
+  #   script: ./mvnw versions:display-dependency-updates -DprocessDependencyManagement=false
 
-deploy:
-  - provider: script
-    script: bash service-deploy
-    on:
-      branch: dev
-  - provider: script
-    script: bash service-deploy
-    on:
-      branch: master
+  - stage: deploy-stg
+    name: "Execute performance, security and system integration tests for the PR"
+    if: type = pull_request AND branch = stg
+    install: skip
+    script: true # TODO: remove "true" once below tests are implemented
+      # - ./performance-tests.sh
+      # - ./security-tests.sh
+      # - ./sit.sh
+  - stage: deploy-stg
+    name: "Deploy to STG"
+    if: type != pull_request AND branch = stg
+    install:
+      - pip show awscli || pip install --user awscli # install aws cli w/o sudo only if necessary
+      - export AWSCLI_PATH=$(pip show awscli | grep Location | awk -F " " '{print $2}')
+      - export PATH=$PATH:$AWSCLI_PATH
+    script:
+      - ./mvnw package -Pprod -DskipTests
+      - docker build -t $IMAGE_NAME:$COMMIT .
+    before_deploy:
+      - export VERSION=`mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec`
+    deploy:
+      - provider: script
+        skip_cleanup: true
+        script: ./service-deploy $VERSION-RC $REGISTRY_DEV_URL $SERVICE_STG $CLUSTER_STG $AWS_ECS_DEV_DEPLOYER_ACCESS_KEY_ID $AWS_ECS_DEV_DEPLOYER_SECRET_ACCESS_KEY
+        on:
+          branch: stg
+    # after_deploy: # Will be executed once deployment is done and successful. If any of those tests fail, travis build will fail and rollback will be executed
+    #   - "./performance-tests || (./rollbackService.sh;travis_terminate 1);"
+    #   - "./security-tests || (./rollbackService.sh;travis_terminate 1);"
+    #   - "./sit || (./rollbackService.sh;travis_terminate 1);"
+
+  - stage: deploy-prod
+    name: "Deploy to PROD"
+    if: type != pull_request AND branch = master
+    install:
+      - pip show awscli || pip install --user awscli # install aws cli w/o sudo only if necessary
+      - export AWSCLI_PATH=$(pip show awscli | grep Location | awk -F " " '{print $2}')
+      - export PATH=$PATH:$AWSCLI_PATH
+    before_script:
+      - export VERSION=`mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec`
+    script: 
+      # TODO: create copy-image.sh script
+      # - ./copy-image.sh $REGISTRY_DEV_URL $REGISTRY_PROD_URL $VERSION-RC # We use the image created during stg deployment ("RC") and copy it to production registry
+      - ./mvnw package -Pprod -DskipTests
+      - docker build -t $IMAGE_NAME:$COMMIT .
+    deploy:
+      - provider: script
+        skip_cleanup: true
+        script: ./service-deploy $VERSION $REGISTRY_PROD_URL $SERVICE_PROD $CLUSTER_PROD $AWS_ECS_PROD_DEPLOYER_ACCESS_KEY_ID $AWS_ECS_PROD_DEPLOYER_SECRET_ACCESS_KEY
+        on:
+          branch: master
+          condition: type != pull_request
+
+## Git-crypt initialisation. To be used only when git-crypt is set for the repository
+# before_install:
+#   - echo "$GPG_CRYPT_KEY" | base64 -d >  .git-crypt/tmp/git-crypt.key
+#   - gpg --import .git-crypt/tmp/git-crypt.key
+#   - git-crypt unlock
 
 notifications:
   webhooks:
