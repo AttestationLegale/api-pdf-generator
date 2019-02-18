@@ -1,23 +1,31 @@
 #! /bin/bash
 
-export VERSION=`mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec`
-export REPO=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo $REGISTRY_PROD_URL; else echo $REGISTRY_DEV_URL ; fi`
-export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo $VERSION; else echo $VERSION-$TRAVIS_BRANCH | tr '/' '-' ; fi`
-docker tag $IMAGE_NAME:$COMMIT $REPO:$TAG
-docker tag $IMAGE_NAME:$COMMIT $REPO:latest
-docker tag $IMAGE_NAME:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
-docker push $REPO:$TAG
-docker push $REPO:latest
-docker push $REPO:travis-$TRAVIS_BUILD_NUMBER
+##
+# Deploy docker image to AWS ECS and execute ecs-deploy script to update ECS service
+# Usage: service-deploy.sh {Tag name} {registry URL} {ECS cluster name} {AWS access key ID} {AWS access key secret}
+##
+
+TAG=$(echo $1 | tr '/' '-')
+REGISTRY=$2
+SERVICE_NAME=$3
+CLUSTER_NAME=$4
+export AWS_ACCESS_KEY_ID=$5
+export AWS_SECRET_ACCESS_KEY=$6
+
+eval $(aws ecr get-login --region $AWS_REGION --no-include-email) #needs AWS_REGION AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY envvars
+
+docker tag $IMAGE_NAME:$COMMIT $REGISTRY:$TAG
+# "latest" tag is only needed for dev or master
+if [ "$TRAVIS_BRANCH" != "stg" ]; then docker tag $IMAGE_NAME:$COMMIT $REGISTRY:latest; fi
+docker tag $IMAGE_NAME:$COMMIT $REGISTRY:travis-$TRAVIS_BUILD_NUMBER
+docker push $REGISTRY:$TAG
+# "latest" tag is only needed for dev or master
+if [ "$TRAVIS_BRANCH" != "stg" ]; then docker push $REGISTRY:latest; fi
+docker push $REGISTRY:travis-$TRAVIS_BUILD_NUMBER
 curl https://raw.githubusercontent.com/AttestationLegale/ecs-deploy/master/ecs-deploy > ecs-deploy
 chmod +x ecs-deploy
 
-if [ "$TRAVIS_BRANCH" == "dev" ]; then
-    echo "Deploying $TRAVIS_BRANCH on $SERVICE_DEV (tag: $REPO:$TAG)"
-    ./ecs-deploy -n $SERVICE_DEV -c $CLUSTER_DEV -i $REPO:$TAG -r $AWS_REGION -k $AWS_ECS_DEV_DEPLOYER_ACCESS_KEY_ID -s $AWS_ECS_DEV_DEPLOYER_SECRET_ACCESS_KEY
-elif [ "$TRAVIS_BRANCH" == "master" ]; then
-    echo "Deploying $TRAVIS_BRANCH on $SERVICE_PROD (tag: $REPO:$TAG)"
-    ./ecs-deploy -n $SERVICE_PROD -c $CLUSTER_PROD -i $REPO:$TAG -r $AWS_REGION -k $AWS_ECS_PROD_DEPLOYER_ACCESS_KEY_ID -s $AWS_ECS_PROD_DEPLOYER_SECRET_ACCESS_KEY
-fi
+echo "Deploying $TRAVIS_BRANCH on $SERVICE_NAME (tag: $REGISTRY:$TAG)"
+./ecs-deploy -n $SERVICE_NAME -c $CLUSTER_NAME -i $REGISTRY:$TAG -r $AWS_REGION -k $AWS_ACCESS_KEY_ID -s $AWS_SECRET_ACCESS_KEY
 
-echo "Deploying $TRAVIS_BRANCH on $SERVICE_DEV done !"
+echo "Deploying $TRAVIS_BRANCH on $SERVICE_NAME done !"
