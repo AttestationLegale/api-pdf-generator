@@ -47,6 +47,8 @@ jobs:
   #     - if [ ! -f  /usr/local/bin/git-crypt ]; then echo "128817a63de17a5af03fe69241e453436c6c286c86dd37fb70ed9b3bf7171d7d  git-crypt" | shasum -a 256 -c -; fi
   #     - if [ ! -f  /usr/local/bin/git-crypt ]; then chmod +x git-crypt; fi
   #     - if [ ! -f  /usr/local/bin/git-crypt ]; then sudo cp git-crypt /usr/local/bin/; fi
+  #     - curl https://raw.githubusercontent.com/AttestationLegale/ecs-deploy/master/service-deploy.sh > service-deploy.sh
+  #     - chmod +x service-deploy.sh
   #     - ./mvnw package -DskipTests=true -Dmaven.javadoc.skip=true -B -V # Downloading dependencies
   #   before_script: true
   #   script: true
@@ -72,10 +74,12 @@ jobs:
       - docker build -t $IMAGE_NAME:$COMMIT .
     before_deploy:
       - export VERSION=`mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec`
+      - curl https://raw.githubusercontent.com/AttestationLegale/ecs-deploy/master/service-deploy.sh > service-deploy.sh
+      - chmod +x service-deploy.sh
     deploy:
       - provider: script
         skip_cleanup: true
-        script: ./service-deploy $VERSION-$TRAVIS_BRANCH $REGISTRY_DEV_URL $SERVICE_DEV $CLUSTER_DEV $AWS_ECS_DEV_DEPLOYER_ACCESS_KEY_ID $AWS_ECS_DEV_DEPLOYER_SECRET_ACCESS_KEY
+        script: ./service-deploy.sh $VERSION-$TRAVIS_BRANCH $REGISTRY_DEV_URL $SERVICE_DEV $CLUSTER_DEV $AWS_ECS_DEV_DEPLOYER_ACCESS_KEY_ID $AWS_ECS_DEV_DEPLOYER_SECRET_ACCESS_KEY
         on:
           branch: dev
           condition: type != pull_request
@@ -112,10 +116,12 @@ jobs:
       - docker build -t $IMAGE_NAME:$COMMIT .
     before_deploy:
       - export VERSION=`mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec`
+      - curl https://raw.githubusercontent.com/AttestationLegale/ecs-deploy/master/service-deploy.sh > service-deploy.sh
+      - chmod +x service-deploy.sh
     deploy:
       - provider: script
         skip_cleanup: true
-        script: ./service-deploy $VERSION-RC $REGISTRY_DEV_URL $SERVICE_STG $CLUSTER_STG $AWS_ECS_DEV_DEPLOYER_ACCESS_KEY_ID $AWS_ECS_DEV_DEPLOYER_SECRET_ACCESS_KEY
+        script: ./service-deploy.sh $VERSION-RC $REGISTRY_DEV_URL $SERVICE_STG $CLUSTER_STG $AWS_ECS_DEV_DEPLOYER_ACCESS_KEY_ID $AWS_ECS_DEV_DEPLOYER_SECRET_ACCESS_KEY
         on:
           branch: stg
     # after_deploy: # Will be executed once deployment is done and successful. If any of those tests fail, travis build will fail and rollback will be executed
@@ -137,10 +143,13 @@ jobs:
       # - ./copy-image.sh $REGISTRY_DEV_URL $REGISTRY_PROD_URL $VERSION-RC # We use the image created during stg deployment ("RC") and copy it to production registry
       - ./mvnw package -Pprod -DskipTests
       - docker build -t $IMAGE_NAME:$COMMIT .
+    before_deploy:
+      - curl https://raw.githubusercontent.com/AttestationLegale/ecs-deploy/master/service-deploy.sh > service-deploy.sh
+      - chmod +x service-deploy.sh
     deploy:
       - provider: script
         skip_cleanup: true
-        script: ./service-deploy $VERSION $REGISTRY_PROD_URL $SERVICE_PROD $CLUSTER_PROD $AWS_ECS_PROD_DEPLOYER_ACCESS_KEY_ID $AWS_ECS_PROD_DEPLOYER_SECRET_ACCESS_KEY
+        script: ./service-deploy.sh $VERSION $REGISTRY_PROD_URL $SERVICE_PROD $CLUSTER_PROD $AWS_ECS_PROD_DEPLOYER_ACCESS_KEY_ID $AWS_ECS_PROD_DEPLOYER_SECRET_ACCESS_KEY
         on:
           branch: master
           condition: type != pull_request
