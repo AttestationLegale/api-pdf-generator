@@ -1,6 +1,0 @@
-== Overview
-
-include::security&authentication.adoc[]
-include::messaging.adoc[]
-include::client.adoc[]
-include::contact.adoc[]

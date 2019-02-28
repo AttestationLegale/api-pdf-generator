@@ -39,7 +39,6 @@
         <assertj.version>3.10.0</assertj.version>
         <commons-io.version>2.6</commons-io.version>
         <commons-lang.version>3.7</commons-lang.version>
-        <docker-maven-plugin.version>0.4.13</docker-maven-plugin.version>
         <elasticsearch.version>5.6.3</elasticsearch.version>
         <guava.version>25.1-jre</guava.version>
         <jacoco-maven-plugin.version>0.7.9</jacoco-maven-plugin.version>
@@ -50,20 +49,10 @@
         <validation-api.version>1.1.0.Final</validation-api.version>
         <wiremock.version>2.18.0</wiremock.version>
 
-        <!-- Documentation -->
-        <asciidoctor.version>1.5.5</asciidoctor.version>
-        <swagger2markup.version>1.3.1</swagger2markup.version>
-        <spring-restdocs.version>2.0.1.RELEASE</spring-restdocs.version>
-        <asciidoctorj-pdf.version>1.5.0-alpha.14</asciidoctorj-pdf.version>
-
         <m2e.apt.activation>jdt_apt</m2e.apt.activation>
         <maven-compiler-plugin.version>3.6.0</maven-compiler-plugin.version>
         <maven-enforcer-plugin.version>1.4.1</maven-enforcer-plugin.version>
         <maven-resources-plugin.version>3.0.1</maven-resources-plugin.version>
-
-        <!-- These remain empty unless the corresponding profile is active -->
-        <profile.no-liquibase />
-        <profile.swagger />
 
         <!-- Sonar properties -->
         <project.testresult.directory>${project.build.directory}/test-results</project.testresult.directory>
@@ -203,14 +192,6 @@
             <artifactId>json-path</artifactId>
             <scope>test</scope>
             <!-- parent POM declares this dependency in default (compile) scope -->
-        </dependency>
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger2</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-bean-validators</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -363,31 +344,6 @@
             <version>${wiremock.version}</version>
             <scope>test</scope>
         </dependency>
-        <!-- documentation -->
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-staticdocs</artifactId>
-            <version>2.6.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.restdocs</groupId>
-            <artifactId>spring-restdocs-mockmvc</artifactId>
-            <version>${spring-restdocs.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.restdocs</groupId>
-            <artifactId>spring-restdocs-core</artifactId>
-            <version>${spring-restdocs.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.github.swagger2markup</groupId>
-            <artifactId>swagger2markup-spring-restdocs-ext</artifactId>
-            <version>${swagger2markup.version}</version>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
@@ -538,22 +494,6 @@
                         on port 5005 <jvmArguments>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005</jvmArguments> -->
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>com.spotify</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-                <version>${docker-maven-plugin.version}</version>
-                <configuration>
-                    <imageName>ecm</imageName>
-                    <dockerDirectory>src/main/docker</dockerDirectory>
-                    <resources>
-                        <resource>
-                            <targetPath>/</targetPath>
-                            <directory>${project.build.directory}</directory>
-                            <include>${project.build.finalName}.war</include>
-                        </resource>
-                    </resources>
-                </configuration>
-            </plugin>
             <!-- jhipster-needle-maven-add-plugin -->
             <plugin>
                 <groupId>com.amashchenko.maven.plugin</groupId>
@@ -609,9 +549,6 @@
             </plugins>
         </pluginManagement>
     </build>
-
-
-
     <profiles>
         <profile>
             <id>dev</id>
@@ -643,7 +580,7 @@
                 <!-- log configuration -->
                 <logback.loglevel>DEBUG</logback.loglevel>
                 <!-- default Spring profiles -->
-                <spring.profiles.active>dev${profile.no-liquibase}</spring.profiles.active>
+                <spring.profiles.active>dev</spring.profiles.active>
             </properties>
         </profile>
         <profile>
@@ -692,7 +629,7 @@
                 <!-- log configuration -->
                 <logback.loglevel>DEBUG</logback.loglevel>
                 <!-- default Spring profiles -->
-                <spring.profiles.active>prod${profile.swagger}${profile.no-liquibase}</spring.profiles.active>
+                <spring.profiles.active>prod</spring.profiles.active>
             </properties>
         </profile>
     </profiles>
