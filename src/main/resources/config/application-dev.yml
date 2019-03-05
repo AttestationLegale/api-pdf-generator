@@ -16,7 +16,6 @@
 spring:
     profiles:
         active: dev
-        include: swagger
     devtools:
         restart:
             enabled: true
@@ -90,11 +89,6 @@ jhipster:
         exposed-headers: "X-Total-Count"
         allow-credentials: true
         max-age: 1800
-    security:
-        client-authorization:
-            access-token-uri: https://identity.preprod.onceforall.com/auth/realms/OnceForAll/protocol/openid-connect/token
-            client-id: ofa
-            client-secret: afd07983-fd1f-4a60-aca5-71d8b57090e8
     mail: # specific JHipster mail property, for standard properties see MailProperties
         from: pdf-generator@localhost
         base-url: http://127.0.0.1:8085
