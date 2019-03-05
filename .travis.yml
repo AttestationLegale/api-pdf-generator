@@ -28,11 +28,11 @@ env:
 stages:
   # - precache # create cache for all stages; to enable only if next stages have several jobs to be executed in parallel
   - name: test-and-deploy-int # execute test and deploy INT environment
-    if: branch != stg AND branch != master
+    if: branch != stg AND branch != master AND tag IS blank
   - name: deploy-stg
-    if: branch = stg
+    if: branch = stg AND tag IS blank
   - name: deploy-prod
-    if: type != pull_request AND branch = master
+    if: type != pull_request AND branch = master AND tag IS blank
 
 jobs:
   include:

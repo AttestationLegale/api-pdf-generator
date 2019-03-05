@@ -495,23 +495,6 @@
                 </configuration>
             </plugin>
             <!-- jhipster-needle-maven-add-plugin -->
-            <plugin>
-                <groupId>com.amashchenko.maven.plugin</groupId>
-                <artifactId>gitflow-maven-plugin</artifactId>
-                <version>1.10.0</version>
-                <configuration>
-                    <gitFlowConfig>
-                        <productionBranch>master</productionBranch>
-                        <developmentBranch>dev</developmentBranch>
-                        <featureBranchPrefix>feature/</featureBranchPrefix>
-                        <releaseBranchPrefix>release/</releaseBranchPrefix>
-                        <hotfixBranchPrefix>hotfix/</hotfixBranchPrefix>
-                        <supportBranchPrefix>support/</supportBranchPrefix>
-                        <versionTagPrefix></versionTagPrefix>
-                        <origin>origin</origin>
-                    </gitFlowConfig>
-                </configuration>
-            </plugin>
         </plugins>
         <pluginManagement>
             <plugins>
@@ -630,6 +613,57 @@
                 <logback.loglevel>DEBUG</logback.loglevel>
                 <!-- default Spring profiles -->
                 <spring.profiles.active>prod</spring.profiles.active>
+            </properties>
+        </profile>
+        <profile>
+            <id>deploy-stg</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.amashchenko.maven.plugin</groupId>
+                        <artifactId>gitflow-maven-plugin</artifactId>
+                        <version>1.10.0</version>
+                        <configuration>
+                            <gitFlowConfig>
+                                <productionBranch>stg</productionBranch>
+                                <developmentBranch>dev</developmentBranch>
+                            </gitFlowConfig>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+            <properties>
+                <!-- gitflow release plugin configuration -->
+                <digitsOnlyDevVersion>true</digitsOnlyDevVersion>
+                <skipTag>true</skipTag>
+                <!-- log configuration -->
+                <logback.loglevel>DEBUG</logback.loglevel>
+                <!-- default Spring profiles -->
+                <spring.profiles.active>dev</spring.profiles.active>
+            </properties>
+        </profile>
+        <profile>
+            <id>deploy-prod</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.amashchenko.maven.plugin</groupId>
+                        <artifactId>gitflow-maven-plugin</artifactId>
+                        <version>1.10.0</version>
+                        <configuration>
+                            <gitFlowConfig>
+                                <productionBranch>master</productionBranch>
+                                <developmentBranch>stg</developmentBranch>
+                            </gitFlowConfig>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+            <properties>
+                <!-- log configuration -->
+                <logback.loglevel>DEBUG</logback.loglevel>
+                <!-- default Spring profiles -->
+                <spring.profiles.active>dev</spring.profiles.active>
             </properties>
         </profile>
     </profiles>
