@@ -1,2 +1,0 @@
-
-TODO Define Client API ex Druplex etc
