@@ -54,7 +54,7 @@ security:
 
 # ===================================================================
 # To enable SSL, generate a certificate using:
-# keytool -genkey -alias ecm -storetype PKCS12 -keyalg RSA -keysize 2048 -keystore keystore.p12 -validity 3650
+# keytool -genkey -alias pdfgenerator -storetype PKCS12 -keyalg RSA -keysize 2048 -keystore keystore.p12 -validity 3650
 #
 # You can also use Let's Encrypt:
 # https://maximilian-boehm.com/hp2121/Create-a-Java-Keystore-JKS-from-Let-s-Encrypt-Certificates.htm
@@ -67,7 +67,7 @@ security:
 #        key-store: keystore.p12
 #        key-store-password: <your-password>
 #        keyStoreType: PKCS12
-#        keyAlias: ecm
+#        keyAlias: pdfgenerator
 # ===================================================================
 server:
     port: 8092
