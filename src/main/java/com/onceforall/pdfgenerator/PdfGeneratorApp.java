@@ -36,7 +36,7 @@ public class PdfGeneratorApp {
     }
 
     /**
-     * Initializes ecm.
+     * Initializes pdfgenerator.
      * <p>
      * Spring profiles can be configured with a program arguments --spring.profiles.active=your-active-profile
      * <p>
