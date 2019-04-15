@@ -1,22 +1,15 @@
 package com.onceforall.pdfgenerator.web.rest.errors;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
-/**
- * View Model for transferring error message with a list of field errors.
- */
-public class ErrorVM implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class ErrorVM {
 
     private final String message;
+    
     private final String description;
 
-    private List<FieldErrorVM> fieldErrors = new ArrayList<>();
-
-    private List<StackTraceElement> stackTraceElements = new ArrayList<>();
+    private Map<String, Object> additionnalData = new HashMap<>();
 
     public ErrorVM(String message) {
         this(message, null);
@@ -27,17 +20,14 @@ public class ErrorVM implements Serializable {
         this.description = description;
     }
 
-    public ErrorVM(String message, String description, List<FieldErrorVM> fieldErrors, List<StackTraceElement> stackTraceElements) {
-        this.message = message;
-        this.description = description;
-        this.fieldErrors = fieldErrors;
-        this.stackTraceElements = stackTraceElements;
+    public void addAdditionnalData(String key, Object object) {
+    	additionnalData.put(key, object);
     }
-
-    public void add(String objectName, String field, String message) {
-        fieldErrors.add(new FieldErrorVM(objectName, field, message));
+    
+    public void addAdditionnalData(Map<String, Object> additionnalData) {
+    	this.additionnalData.putAll(additionnalData);
     }
-
+    
     public String getMessage() {
         return message;
     }
@@ -46,15 +36,7 @@ public class ErrorVM implements Serializable {
         return description;
     }
 
-    public List<FieldErrorVM> getFieldErrors() {
-        return fieldErrors;
-    }
-
-    public List<StackTraceElement> getStackTraceElements() {
-        return stackTraceElements;
-    }
-    
-    public void setStackTraceElements(List<StackTraceElement> stackTraceElements) {
-        this.stackTraceElements = stackTraceElements;
+    public Map<String, Object> getAdditionnalData() {
+        return additionnalData;
     }
 }
