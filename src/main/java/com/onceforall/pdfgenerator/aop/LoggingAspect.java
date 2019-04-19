@@ -1,4 +1,4 @@
-package com.onceforall.pdfgenerator.aop.logging;
+package com.onceforall.pdfgenerator.aop;
 
 import java.util.Arrays;
 
@@ -49,8 +49,8 @@ public class LoggingAspect {
      */
     @AfterThrowing(pointcut = "applicationPackagePointcut() && springBeanPointcut()", throwing = "e")
     public void logAfterThrowing(JoinPoint joinPoint, Throwable e) {
-    	LOGGER.error("\"{}\" Exception in {}.{}() with the following message : {}", e.getClass().getSimpleName(), joinPoint.getSignature().getDeclaringTypeName(),
-            joinPoint.getSignature().getName(), e.getMessage());
+    	LOGGER.error(String.format("\"%s\" Exception in %s.%s() with the following message : %s", e.getClass().getSimpleName(), joinPoint.getSignature().getDeclaringTypeName(),
+            joinPoint.getSignature().getName(), e.getMessage()), e);
     }
 
     /**

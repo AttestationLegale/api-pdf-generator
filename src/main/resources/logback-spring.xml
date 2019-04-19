@@ -22,7 +22,7 @@
     </appender>
 -->
 
-    <logger name="com.onceforall.ecm" level="#logback.loglevel#"/>
+    <logger name="com.onceforall.pdfgenerator" level="#logback.loglevel#"/>
 
     <logger name="io.github.jhipster" level="#logback.loglevel#"/>
 
