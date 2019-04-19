@@ -1,4 +1,4 @@
-package com.onceforall.pdfgenerator.aop.logging;
+package com.onceforall.pdfgenerator.aop;
 
 import java.util.Arrays;
 

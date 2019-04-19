@@ -9,7 +9,7 @@ public class ErrorVM {
     
     private final String description;
 
-    private Map<String, Object> additionnalData = new HashMap<>();
+    private Map<String, Object> additionalData = new HashMap<>();
 
     public ErrorVM(String message) {
         this(message, null);
@@ -20,12 +20,12 @@ public class ErrorVM {
         this.description = description;
     }
 
-    public void addAdditionnalData(String key, Object object) {
-    	additionnalData.put(key, object);
+    public void addAdditionalData(String key, Object object) {
+    	additionalData.put(key, object);
     }
     
-    public void addAdditionnalData(Map<String, Object> additionnalData) {
-    	this.additionnalData.putAll(additionnalData);
+    public void addAdditionalData(Map<String, Object> additionalData) {
+    	this.additionalData.putAll(additionalData);
     }
     
     public String getMessage() {
@@ -36,7 +36,7 @@ public class ErrorVM {
         return description;
     }
 
-    public Map<String, Object> getAdditionnalData() {
-        return additionnalData;
+    public Map<String, Object> getAdditionalData() {
+        return additionalData;
     }
 }

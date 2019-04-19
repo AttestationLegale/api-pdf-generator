@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.ResponseEntity.BodyBuilder;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -40,22 +41,29 @@ public class ExceptionTranslator {
        binder.initDirectFieldAccess();
     }
 
-    /* Do not delete between comments (Non internal error)  */
+    /* Handler for generic Exception  - Do not modify between comments */
     
-    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ExceptionHandler({MethodArgumentNotValidException.class, BindException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
-    public ErrorVM processValidationError(MethodArgumentNotValidException ex) {
-        
-    	BindingResult result = ex.getBindingResult();
-        List<FieldError> fieldErrors = result.getFieldErrors();
+    public ErrorVM processValidationError(Exception ex) {
+    	
+    	BindingResult result;
+    	
+    	if (ex instanceof MethodArgumentNotValidException) {
+    		result = ((MethodArgumentNotValidException) ex).getBindingResult();
+    	} else {
+    		result = ((BindException) ex).getBindingResult();
+    	}
+
+    	List<FieldError> fieldErrors = result.getFieldErrors();
         
         ErrorVM erroVM = new ErrorVM(ErrorConstants.ERR_VALIDATION);
         List<FieldErrorVM> fieldErrorVMs = new ArrayList<>();
         for (FieldError fieldError : fieldErrors) {
         	fieldErrorVMs.add(new FieldErrorVM(fieldError.getObjectName(), fieldError.getField(), fieldError.getDefaultMessage()));
         }
-        erroVM.addAdditionnalData("FieldErrors", fieldErrorVMs);
+        erroVM.addAdditionalData("fieldErrors", fieldErrorVMs);
         
         return erroVM;
     }
@@ -81,7 +89,7 @@ public class ExceptionTranslator {
         return new ErrorVM(ErrorConstants.ERR_METHOD_NOT_SUPPORTED, exception.getMessage());
     }
     
-    /* Do not delete between comments (Non internal error)  */
+    /* Handler for generic Exception  - Do not modify between comments */
     
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorVM> processException(Exception ex) {
@@ -92,7 +100,7 @@ public class ExceptionTranslator {
         	InternalException internalException = (InternalException) ex;
         	builder = ResponseEntity.status(internalException.getStatusCode());
         	errorVM = new ErrorVM(internalException.getCode(), internalException.getMessage());
-        	errorVM.addAdditionnalData(internalException.getAdditionnalData());
+        	errorVM.addAdditionalData(internalException.getAdditionnalData());
         } else if (responseStatus != null) {
             builder = ResponseEntity.status(responseStatus.value());
             errorVM = new ErrorVM("error." + responseStatus.value().value(), responseStatus.reason());
@@ -100,7 +108,7 @@ public class ExceptionTranslator {
             builder = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
             errorVM = new ErrorVM(ErrorConstants.ERR_INTERNAL_SERVER_ERROR, "Internal server error");
             if (LOGGER.isDebugEnabled()) {
-                errorVM.addAdditionnalData("StackTraceElements", Arrays.asList(ex.getStackTrace()));
+                errorVM.addAdditionalData("stackTraceElements", Arrays.asList(ex.getStackTrace()));
             }
         }
         return builder.body(errorVM);
