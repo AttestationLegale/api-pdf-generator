@@ -4,7 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
-import com.onceforall.pdfgenerator.aop.logging.LoggingAspect;
+import com.onceforall.pdfgenerator.aop.LoggingAspect;
 
 @Configuration
 @EnableAspectJAutoProxy

@@ -12,7 +12,6 @@ import org.stringtemplate.v4.ST;
 
 import com.itextpdf.html2pdf.ConverterProperties;
 import com.itextpdf.html2pdf.HtmlConverter;
-import com.onceforall.pdfgenerator.exception.PdfGenerationException;
 import com.onceforall.pdfgenerator.json.JSONObject;
 
 @Service
@@ -44,7 +43,7 @@ public class PdfService {
         try {
 			HtmlConverter.convertToPdf(html, baos, properties);
 		} catch (IOException e) {
-			throw new PdfGenerationException(e.getMessage());
+			throw new IllegalArgumentException("An error occured during pdf generation : " + e.getMessage());
 		}
         
         return baos;
