@@ -100,7 +100,7 @@ public class ExceptionTranslator {
         	InternalException internalException = (InternalException) ex;
         	builder = ResponseEntity.status(internalException.getStatusCode());
         	errorVM = new ErrorVM(internalException.getCode(), internalException.getMessage());
-        	errorVM.addAdditionalData(internalException.getAdditionnalData());
+        	errorVM.addAdditionalData(internalException.getAdditionalData());
         } else if (responseStatus != null) {
             builder = ResponseEntity.status(responseStatus.value());
             errorVM = new ErrorVM("error." + responseStatus.value().value(), responseStatus.reason());
