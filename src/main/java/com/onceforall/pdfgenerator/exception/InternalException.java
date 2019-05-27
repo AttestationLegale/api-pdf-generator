@@ -19,7 +19,7 @@ public abstract class InternalException extends RuntimeException {
 		super(message != null ? message : DEFAULT_MESSAGE);
 	}
 	
-	public Map<String, Object> getAdditionnalData() {
+	public Map<String, Object> getAdditionalData() {
 		return new HashMap<>();
 	}
 
