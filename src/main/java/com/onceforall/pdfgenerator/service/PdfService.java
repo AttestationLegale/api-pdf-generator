@@ -30,12 +30,17 @@ public class PdfService {
     	LOGGER.debug(String.valueOf(data.keySet().size()));
     	LOGGER.debug(String.valueOf(i18n.keySet().size()));
     	
+    	long start = System.currentTimeMillis();
+    	
     	ST stringTemplate = new ST(template, '$', '$');
     	stringTemplate.add("data", new JSONObject(data));
     	stringTemplate.add("i18n", new JSONObject(i18n));
     	
     	String html = stringTemplate.render();
-    	LOGGER.debug("Generated html : \n" + html);
+    	
+    	LOGGER.debug("Alice - Time to generate Html = " + (System.currentTimeMillis() - start));
+    	
+    	start = System.currentTimeMillis();
     	
     	ByteArrayOutputStream baos = new ByteArrayOutputStream();
     	ConverterProperties properties = new ConverterProperties();
@@ -46,6 +51,8 @@ public class PdfService {
 			throw new IllegalArgumentException("An error occured during pdf generation : " + e.getMessage());
 		}
         
+    	LOGGER.debug("Alice - Time to generate PDF = " + (System.currentTimeMillis() - start));
+    	
         return baos;
     }
 }
