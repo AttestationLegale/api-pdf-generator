@@ -1,4 +1,4 @@
-FROM openjdk:8-jre-alpine
+FROM openjdk:8-jdk-alpine
 
 ENV SPRING_OUTPUT_ANSI_ENABLED=NEVER \
     JHIPSTER_SLEEP=0 \

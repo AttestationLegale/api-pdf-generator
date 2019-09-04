@@ -7,8 +7,10 @@ import java.util.Collection;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import co.elastic.apm.attach.ElasticApmAttacher;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -62,6 +64,9 @@ public class PdfGeneratorApp {
      * @throws UnknownHostException if the local host name could not be resolved into an address
      */
     public static void main(String[] args) throws UnknownHostException {
+        if(StringUtils.isNotEmpty(System.getenv("ELASTIC_APM_SERVER_URLS"))) {
+            ElasticApmAttacher.attach();
+        }
         SpringApplication app = new SpringApplication(PdfGeneratorApp.class);
         DefaultProfileUtil.addDefaultProfile(app);
         Environment env = app.run(args).getEnvironment();
