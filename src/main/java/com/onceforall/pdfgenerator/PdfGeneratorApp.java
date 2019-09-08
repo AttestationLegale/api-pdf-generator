@@ -64,7 +64,7 @@ public class PdfGeneratorApp {
      * @throws UnknownHostException if the local host name could not be resolved into an address
      */
     public static void main(String[] args) throws UnknownHostException {
-        if(StringUtils.isNotEmpty(System.getenv("ELASTIC_APM_SERVER_URLS"))) {
+        if(StringUtils.isNotEmpty(System.getenv("APM_SERVER_URLS"))) {
             ElasticApmAttacher.attach();
         }
         SpringApplication app = new SpringApplication(PdfGeneratorApp.class);
