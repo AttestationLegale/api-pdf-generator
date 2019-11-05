@@ -25,14 +25,13 @@ public class PdfResource {
     @PostMapping(value = "/generate", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.OK)
     public void generate(HttpServletResponse response, @Valid @RequestBody PdfGenerationDataVM pdfGenerationData) throws IOException, JSONException {
-
-        ByteArrayOutputStream baos = pdfService.generate(pdfGenerationData.template, pdfGenerationData.data, pdfGenerationData.i18n);
-
-        response.setContentType("text/html");
-        response.addHeader(
-            "Content-Disposition",
-            "attachment; filename=generated.pdf");
-        response.setContentLength(baos.size());
-        baos.writeTo(response.getOutputStream());
+        try (ByteArrayOutputStream baos = pdfService.generate(pdfGenerationData.template, pdfGenerationData.data, pdfGenerationData.i18n)){
+	        response.setContentType("text/html");
+	        response.addHeader(
+	            "Content-Disposition",
+	            "attachment; filename=generated.pdf");
+	        response.setContentLength(baos.size());
+	        baos.writeTo(response.getOutputStream());
+        }
     }
 }
