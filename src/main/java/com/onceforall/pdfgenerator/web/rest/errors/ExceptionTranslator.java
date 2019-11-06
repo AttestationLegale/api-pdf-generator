@@ -108,6 +108,7 @@ public class ExceptionTranslator {
             builder = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
             errorVM = new ErrorVM(ErrorConstants.ERR_INTERNAL_SERVER_ERROR, "Internal server error");
             if (LOGGER.isDebugEnabled()) {
+                errorVM.addAdditionalData("originalExceptionMessage", ex.getMessage());
                 errorVM.addAdditionalData("stackTraceElements", Arrays.asList(ex.getStackTrace()));
             }
         }
