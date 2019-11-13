@@ -27,9 +27,6 @@ public class PdfService {
 
     public ByteArrayOutputStream generate(String template, Map<String, Object> data, Map<String, Object> i18n) {
     	  
-    	LOGGER.debug(String.valueOf(data.keySet().size()));
-    	LOGGER.debug(String.valueOf(i18n.keySet().size()));
-    	
     	long start = System.currentTimeMillis();
     	
     	ST stringTemplate = new ST(template, '$', '$');
@@ -38,7 +35,7 @@ public class PdfService {
     	
     	String html = stringTemplate.render();
     	
-    	LOGGER.debug("Alice - Time to generate Html = " + (System.currentTimeMillis() - start));
+    	LOGGER.debug("Time to generate Html = " + (System.currentTimeMillis() - start));
     	
     	start = System.currentTimeMillis();
     	
@@ -51,7 +48,7 @@ public class PdfService {
 			throw new IllegalArgumentException("An error occured during pdf generation : " + e.getMessage());
 		}
         
-    	LOGGER.debug("Alice - Time to generate PDF = " + (System.currentTimeMillis() - start));
+    	LOGGER.debug("Time to generate PDF = " + (System.currentTimeMillis() - start));
     	
         return baos;
     }
