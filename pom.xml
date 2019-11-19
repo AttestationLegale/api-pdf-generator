@@ -645,6 +645,7 @@
                 <!-- gitflow release plugin configuration -->
                 <digitsOnlyDevVersion>true</digitsOnlyDevVersion>
                 <skipTag>true</skipTag>
+                <skipTestProject>true</skipTestProject>
                 <!-- log configuration -->
                 <logback.loglevel>DEBUG</logback.loglevel>
                 <!-- default Spring profiles -->
