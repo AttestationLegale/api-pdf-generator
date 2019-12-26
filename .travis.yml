@@ -26,7 +26,7 @@ env:
     - CLUSTER_STG=com-ofa-stg-ecs-cluster
 
 stages:
-  # - precache # create cache for all stages; to enable only if next stages have several jobs to be executed in parallel
+  - precache # create cache for all stages; to enable only if next stages have several jobs to be executed in parallel
   - name: test-and-deploy-int # execute test and deploy INT environment
     if: branch != stg AND branch != master AND tag IS blank
   - name: deploy-stg
@@ -37,21 +37,21 @@ stages:
 jobs:
   include:
   ## Install all dependencies and needed extra packages and set the cache. It will be reused by next stages.
-  # - stage: precache
-  #   name: "Create cache"
-  #   install:
-  #     - pip show awscli || pip install --user awscli # install aws cli w/o sudo only if necessary
-  #     - export AWSCLI_PATH=$(pip show awscli | grep Location | awk -F " " '{print $2}')
-  #     - export PATH=$PATH:$AWSCLI_PATH
-  #     - if [ ! -f  /usr/local/bin/git-crypt ]; then curl -L https://github.com/minrk/git-crypt-bin/releases/download/0.6.0/git-crypt > git-crypt; fi
-  #     - if [ ! -f  /usr/local/bin/git-crypt ]; then echo "128817a63de17a5af03fe69241e453436c6c286c86dd37fb70ed9b3bf7171d7d  git-crypt" | shasum -a 256 -c -; fi
-  #     - if [ ! -f  /usr/local/bin/git-crypt ]; then chmod +x git-crypt; fi
-  #     - if [ ! -f  /usr/local/bin/git-crypt ]; then sudo cp git-crypt /usr/local/bin/; fi
-  #     - curl https://raw.githubusercontent.com/AttestationLegale/ecs-deploy/master/service-deploy.sh > service-deploy.sh
-  #     - chmod +x service-deploy.sh
-  #     - ./mvnw package -DskipTests=true -Dmaven.javadoc.skip=true -B -V # Downloading dependencies
-  #   before_script: true
-  #   script: true
+  - stage: precache
+    name: "Create cache"
+    install:
+      - pip show awscli || pip install --user awscli # install aws cli w/o sudo only if necessary
+      - export AWSCLI_PATH=$(pip show awscli | grep Location | awk -F " " '{print $2}')
+      - export PATH=$PATH:$AWSCLI_PATH
+      - if [ ! -f  /usr/local/bin/git-crypt ]; then curl -L https://github.com/minrk/git-crypt-bin/releases/download/0.6.0/git-crypt > git-crypt; fi
+      - if [ ! -f  /usr/local/bin/git-crypt ]; then echo "128817a63de17a5af03fe69241e453436c6c286c86dd37fb70ed9b3bf7171d7d  git-crypt" | shasum -a 256 -c -; fi
+      - if [ ! -f  /usr/local/bin/git-crypt ]; then chmod +x git-crypt; fi
+      - if [ ! -f  /usr/local/bin/git-crypt ]; then sudo cp git-crypt /usr/local/bin/; fi
+      - curl https://raw.githubusercontent.com/AttestationLegale/ecs-deploy/master/service-deploy.sh > service-deploy.sh
+      - chmod +x service-deploy.sh
+      - ./mvnw package -DskipTests=true -Dmaven.javadoc.skip=true -B -V # Downloading dependencies
+    before_script: true
+    script: true
   ## Executes maven and sonar tests for dev and feature branch only
   - stage: test-and-deploy-int
     name: "Execute tests and deploy to INT"
@@ -138,7 +138,7 @@ jobs:
       - export PATH=$PATH:$AWSCLI_PATH
     before_script:
       - export VERSION=`mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec`
-    script: 
+    script:
       # TODO: create copy-image.sh script
       # - ./copy-image.sh $REGISTRY_DEV_URL $REGISTRY_PROD_URL $VERSION-RC # We use the image created during stg deployment ("RC") and copy it to production registry
       - ./mvnw package -Pprod -DskipTests
