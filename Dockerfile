@@ -6,9 +6,13 @@ ENV SPRING_OUTPUT_ANSI_ENABLED=NEVER \
 
 # add directly the war
 ADD target/*.war /app.war
+ADD https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=com.datadoghq&a=dd-java-agent&v=LATEST /user/local/lib/dd-java-agent.jar
 
 EXPOSE 8080
 
+RUN apk --no-cache add curl
+RUN export DATADOG_TRACE_AGENT_HOSTNAME=`curl http://169.254.169.254/latest/meta-data/local-ipv4`
+
 CMD echo "The application will start in ${JHIPSTER_SLEEP}s..." && \
     sleep ${JHIPSTER_SLEEP} && \
-java ${JAVA_OPTS} -Djava.security.egd=file:/dev/./urandom -jar /app.war
+java -javaagent:/user/local/lib/dd-java-agent.jar ${JAVA_OPTS} -Djava.security.egd=file:/dev/./urandom -jar /app.war
