@@ -14,5 +14,4 @@ RUN apk --no-cache add curl
 
 CMD echo "The application will start in ${JHIPSTER_SLEEP}s..." && \
     sleep ${JHIPSTER_SLEEP} && \
-    export DATADOG_TRACE_AGENT_HOSTNAME=`curl http://169.254.169.254/latest/meta-data/local-ipv4` \
 java -javaagent:/user/local/lib/dd-java-agent.jar ${JAVA_OPTS} -Djava.security.egd=file:/dev/./urandom -jar /app.war
