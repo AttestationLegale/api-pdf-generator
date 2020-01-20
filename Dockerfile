@@ -4,7 +4,7 @@ ENV SPRING_OUTPUT_ANSI_ENABLED=NEVER \
     JHIPSTER_SLEEP=0 \
     JAVA_OPTS="-Xmx256m"
 
-COPY entrypoint.sh /entrypoint.sh
+COPY src/main/resources/docker/entrypoint.sh /entrypoint.sh
 
 # add directly the war
 ADD target/*.war /app.war
