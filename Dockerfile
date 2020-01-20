@@ -5,6 +5,7 @@ ENV SPRING_OUTPUT_ANSI_ENABLED=NEVER \
     JAVA_OPTS="-Xmx256m"
 
 COPY src/main/resources/docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 # add directly the war
 ADD target/*.war /app.war
