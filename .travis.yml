@@ -80,6 +80,7 @@ jobs:
       - chmod +x service-deploy.sh
     deploy:
       - provider: script
+        skip_cleanup: true
         script: ./service-deploy.sh $VERSION-$TRAVIS_BRANCH $REGISTRY_DEV_URL $SERVICE_DEV $CLUSTER_DEV $AWS_ECS_DEV_DEPLOYER_ACCESS_KEY_ID $AWS_ECS_DEV_DEPLOYER_SECRET_ACCESS_KEY
         on:
           branch: dev
@@ -121,6 +122,7 @@ jobs:
       - chmod +x service-deploy.sh
     deploy:
       - provider: script
+        skip_cleanup: true
         script: ./service-deploy.sh $VERSION-RC $REGISTRY_DEV_URL $SERVICE_STG $CLUSTER_STG $AWS_ECS_DEV_DEPLOYER_ACCESS_KEY_ID $AWS_ECS_DEV_DEPLOYER_SECRET_ACCESS_KEY
         on:
           branch: stg
@@ -146,19 +148,20 @@ jobs:
     before_deploy:
       - curl https://raw.githubusercontent.com/AttestationLegale/ecs-deploy/master/service-deploy.sh > service-deploy.sh
       - chmod +x service-deploy.sh
+      - curl https://raw.githubusercontent.com/AttestationLegale/ecs-deploy/master/ecs-deploy > ecs-deploy
+      - chmod +x ecs-deploy
     deploy:
       # Deploying to PROD first
       - provider: script
+        skip_cleanup: true
         script: ./service-deploy.sh $VERSION $REGISTRY_PROD_URL $SERVICE_PROD $CLUSTER_PROD $AWS_ECS_PROD_DEPLOYER_ACCESS_KEY_ID $AWS_ECS_PROD_DEPLOYER_SECRET_ACCESS_KEY
         on:
           branch: master
           condition: type != pull_request
       # Deploying to DEMO, after PROD docker image is created and pushed
       - provider: script
-        script: 
-          aws configure set aws_access_key_id ${AWS_ECS_DEV_DEPLOYER_ACCESS_KEY_ID}
-          aws configure set aws_secret_access_key ${AWS_ECS_DEV_DEPLOYER_SECRET_ACCESS_KEY}
-          aws --region ${AWS_REGION} ecs update-service --cluster=${CLUSTER_DEMO} --force-new-deployment --service "${SERVICE_DEMO}"
+        skip_cleanup: true
+        script: ./ecs-deploy -n $SERVICE_DEMO -c $CLUSTER_DEMO -i $REGISTRY_PROD_URL:latest -r $AWS_REGION -k $AWS_ECS_DEV_DEPLOYER_ACCESS_KEY_ID -s $AWS_ECS_DEV_DEPLOYER_SECRET_ACCESS_KEY --force-new-deployment
         on:
           branch: master
           condition: type != pull_request
