@@ -169,6 +169,8 @@ jobs:
       - pip show awscli || pip install --user awscli # install aws cli w/o sudo only if necessary
       - export AWSCLI_PATH=$(pip show awscli | grep Location | awk -F " " '{print $2}')
       - export PATH=$PATH:$AWSCLI_PATH
+      - export AWS_ACCESS_KEY_ID=$AWS_ECS_DEV_DEPLOYER_ACCESS_KEY_ID
+      - export AWS_SECRET_ACCESS_KEY=$AWS_ECS_DEV_DEPLOYER_SECRET_ACCESS_KEY
     script: true
     before_deploy:
       - curl https://raw.githubusercontent.com/AttestationLegale/ecs-deploy/master/ecs-deploy > ecs-deploy
@@ -176,7 +178,7 @@ jobs:
     deploy:
       - provider: script
         skip_cleanup: true
-        script: ./ecs-deploy -n $SERVICE_DEMO -c $CLUSTER_DEMO -i $REGISTRY_PROD_URL:latest -r $AWS_REGION -k $AWS_ECS_DEV_DEPLOYER_ACCESS_KEY_ID -s $AWS_ECS_DEV_DEPLOYER_SECRET_ACCESS_KEY --force-new-deployment
+        script: ./ecs-deploy -n $SERVICE_DEMO -c $CLUSTER_DEMO -i $REGISTRY_PROD_URL:latest -r $AWS_REGION -k $AWS_ACCESS_KEY_ID -s $AWS_SECRET_ACCESS_KEY --force-new-deployment
         on:
           branch: master
           condition: type != pull_request
