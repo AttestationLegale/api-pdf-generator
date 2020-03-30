@@ -25,7 +25,7 @@ env:
     - SERVICE_PROD=com-ofa-prod-api-pdf-generator
     - CLUSTER_STG=com-ofa-stg-ecs-cluster
     - SERVICE_DEMO=com-ofa-demo-api-pdf-generator
-    - CLUSTER_DEMO=com-ofa-demo-ecs-cluster 
+    - CLUSTER_DEMO=com-ofa-demo-ecs-cluster
 
 stages:
   - precache # create cache for all stages; to enable only if next stages have several jobs to be executed in parallel
@@ -34,6 +34,8 @@ stages:
   - name: deploy-stg
     if: branch = stg AND tag IS blank
   - name: deploy-prod
+    if: type != pull_request AND branch = master AND tag IS blank
+  - name: deploy-demo
     if: type != pull_request AND branch = master AND tag IS blank
 
 jobs:
@@ -158,7 +160,20 @@ jobs:
         on:
           branch: master
           condition: type != pull_request
-      # Deploying to DEMO, after PROD docker image is created and pushed
+
+  # Deploying to DEMO, after PROD docker image is created and pushed
+  - stage: deploy-demo
+    name: "Deploy to DEMO"
+    if: type != pull_request AND branch = master
+    install:
+      - pip show awscli || pip install --user awscli # install aws cli w/o sudo only if necessary
+      - export AWSCLI_PATH=$(pip show awscli | grep Location | awk -F " " '{print $2}')
+      - export PATH=$PATH:$AWSCLI_PATH
+    script: true
+    before_deploy:
+      - curl https://raw.githubusercontent.com/AttestationLegale/ecs-deploy/master/ecs-deploy > ecs-deploy
+      - chmod +x ecs-deploy
+    deploy:
       - provider: script
         skip_cleanup: true
         script: ./ecs-deploy -n $SERVICE_DEMO -c $CLUSTER_DEMO -i $REGISTRY_PROD_URL:latest -r $AWS_REGION -k $AWS_ECS_DEV_DEPLOYER_ACCESS_KEY_ID -s $AWS_ECS_DEV_DEPLOYER_SECRET_ACCESS_KEY --force-new-deployment
