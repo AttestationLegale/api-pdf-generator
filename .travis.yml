@@ -24,6 +24,8 @@ env:
     - SERVICE_STG=com-ofa-stg-api-pdf-generator
     - SERVICE_PROD=com-ofa-prod-api-pdf-generator
     - CLUSTER_STG=com-ofa-stg-ecs-cluster
+    - SERVICE_DEMO=com-ofa-demo-api-pdf-generator
+    - CLUSTER_DEMO=com-ofa-demo-ecs-cluster 
 
 stages:
   - precache # create cache for all stages; to enable only if next stages have several jobs to be executed in parallel
@@ -146,10 +148,20 @@ jobs:
     before_deploy:
       - curl https://raw.githubusercontent.com/AttestationLegale/ecs-deploy/master/service-deploy.sh > service-deploy.sh
       - chmod +x service-deploy.sh
+      - curl https://raw.githubusercontent.com/AttestationLegale/ecs-deploy/master/ecs-deploy > ecs-deploy
+      - chmod +x ecs-deploy
     deploy:
+      # Deploying to PROD first
       - provider: script
         skip_cleanup: true
         script: ./service-deploy.sh $VERSION $REGISTRY_PROD_URL $SERVICE_PROD $CLUSTER_PROD $AWS_ECS_PROD_DEPLOYER_ACCESS_KEY_ID $AWS_ECS_PROD_DEPLOYER_SECRET_ACCESS_KEY
+        on:
+          branch: master
+          condition: type != pull_request
+      # Deploying to DEMO, after PROD docker image is created and pushed
+      - provider: script
+        skip_cleanup: true
+        script: ./ecs-deploy -n $SERVICE_DEMO -c $CLUSTER_DEMO -i $REGISTRY_PROD_URL:latest -r $AWS_REGION -k $AWS_ECS_DEV_DEPLOYER_ACCESS_KEY_ID -s $AWS_ECS_DEV_DEPLOYER_SECRET_ACCESS_KEY --force-new-deployment
         on:
           branch: master
           condition: type != pull_request
