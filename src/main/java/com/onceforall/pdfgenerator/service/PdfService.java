@@ -12,6 +12,8 @@ import org.stringtemplate.v4.ST;
 
 import com.itextpdf.html2pdf.ConverterProperties;
 import com.itextpdf.html2pdf.HtmlConverter;
+import com.itextpdf.styledxmlparser.css.media.MediaDeviceDescription;
+import com.itextpdf.styledxmlparser.css.media.MediaType;
 import com.onceforall.pdfgenerator.json.JSONObject;
 
 @Service
@@ -40,8 +42,12 @@ public class PdfService {
     	start = System.currentTimeMillis();
     	
     	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    	
     	ConverterProperties properties = new ConverterProperties();
         properties.setBaseUri(baseUri);
+	    MediaDeviceDescription mediaDeviceDescription = new MediaDeviceDescription(MediaType.PRINT);
+	    properties.setMediaDeviceDescription(mediaDeviceDescription);
+	    
         try {
 			HtmlConverter.convertToPdf(html, baos, properties);
 		} catch (IOException e) {
