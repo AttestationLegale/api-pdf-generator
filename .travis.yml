@@ -85,6 +85,7 @@ jobs:
       - source ./install-jdk.sh --feature 11
       - ./mvnw clean verify sonar:sonar
       - export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64 # Reseting java to openjdk8
+      - export PATH=${JAVA_HOME}/bin:$PATH
       - java -version
       - ./mvnw package -Pstg -DskipTests
       - docker build -t $IMAGE_NAME:$COMMIT .
