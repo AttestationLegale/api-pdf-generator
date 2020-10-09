@@ -81,12 +81,13 @@ jobs:
       # - ./service-security-test.sh
       - java -version
       - echo $JAVA_HOME
+      - ls ~/bin
       - export JAVA_HOME=$HOME/openjdk11
-      - $TRAVIS_BUILD_DIR/install-jdk.sh --install openjdk11 --target $JAVA_HOME
+      - ~/bin/install-jdk.sh --install openjdk11 --target $JAVA_HOME
       - java -version
       - ./mvnw clean verify sonar:sonar
       - export JAVA_HOME=$HOME/openjdk8
-      - $TRAVIS_BUILD_DIR/install-jdk.sh --install openjdk8 --target $JAVA_HOME
+      - ~/bin/install-jdk.sh --install openjdk8 --target $JAVA_HOME
       - ./mvnw package -Pstg -DskipTests
       - docker build -t $IMAGE_NAME:$COMMIT .
     before_deploy:
