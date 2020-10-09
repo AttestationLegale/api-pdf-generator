@@ -59,7 +59,9 @@
         <run.addResources>false</run.addResources>
         <sonar-maven-plugin.version>3.7.0.1746</sonar-maven-plugin.version>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.organization>attestationlegale</sonar.organization>
         <sonar.projectName>api-pdf-generator</sonar.projectName>
+        <sonar.projectKey>AttestationLegale_api-pdf-generator</sonar.projectKey>
         <sonar.exclusions>src/main/webapp/content/**/*.*,
             src/main/webapp/bower_components/**/*.*, src/main/webapp/i18n/*.js,
             target/www/**/*.*</sonar.exclusions>
