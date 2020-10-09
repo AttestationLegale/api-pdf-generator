@@ -79,9 +79,14 @@ jobs:
       # - ./service-performance-test.sh
       # - ./service-load-test.sh
       # - ./service-security-test.sh
-      - jdk_switcher use openjdk11
-      - ./mvnw sonar:sonar -Dsonar.login=$SONAR_LOGIN -Dsonar.password=$SONAR_PASSWORD
-      - jdk_switcher use openjdk8
+      - java -version
+      - echo $JAVA_HOME
+      - export JAVA_HOME=$HOME/openjdk11
+      - $TRAVIS_BUILD_DIR/install-jdk.sh --install openjdk11 --target $JAVA_HOME
+      - java -version
+      - ./mvnw clean verify sonar:sonar
+      - export JAVA_HOME=$HOME/openjdk8
+      - $TRAVIS_BUILD_DIR/install-jdk.sh --install openjdk8 --target $JAVA_HOME
       - ./mvnw package -Pstg -DskipTests
       - docker build -t $IMAGE_NAME:$COMMIT .
     before_deploy:
