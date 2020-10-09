@@ -82,15 +82,10 @@ jobs:
       # - ./service-performance-test.sh
       # - ./service-load-test.sh
       # - ./service-security-test.sh
-      - java -version
-      - echo $JAVA_HOME
-      - ls ~/bin
-      - export JAVA_HOME=$HOME/openjdk11
       - source ./install-jdk.sh --feature 11
-      - java -version
       - ./mvnw clean verify sonar:sonar
-      - export JAVA_HOME=$HOME/openjdk8
-      - source ./install-jdk.sh --feature 8
+      - export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64 # Reseting java to openjdk8
+      - java -version
       - ./mvnw package -Pstg -DskipTests
       - docker build -t $IMAGE_NAME:$COMMIT .
     before_deploy:
