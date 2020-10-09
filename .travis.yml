@@ -79,7 +79,7 @@ jobs:
       # - ./service-performance-test.sh
       # - ./service-load-test.sh
       # - ./service-security-test.sh
-      - ./mvnw sonar:sonar -Dsonar.login=$SONAR_LOGIN -Dsonar.password=$SONAR_PASSWORD
+      - ./mvnw clean verify sonar:sonar
       - ./mvnw package -Pstg -DskipTests
       - docker build -t $IMAGE_NAME:$COMMIT .
     before_deploy:
