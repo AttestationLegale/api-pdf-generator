@@ -33,6 +33,9 @@ env:
     - SERVICE_DEMO=com-ofa-demo-api-pdf-generator
     - CLUSTER_DEMO=com-ofa-demo-ecs-cluster
 
+before_script:
+  - wget https://github.com/sormuras/bach/raw/master/install-jdk.sh
+
 stages:
   - precache # create cache for all stages; to enable only if next stages have several jobs to be executed in parallel
   - name: test-and-deploy-int # execute test and deploy INT environment
@@ -79,7 +82,11 @@ jobs:
       # - ./service-performance-test.sh
       # - ./service-load-test.sh
       # - ./service-security-test.sh
+      - source ./install-jdk.sh --feature 11
       - ./mvnw clean verify sonar:sonar
+      - export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64 # Reseting java to openjdk8
+      - export PATH=${JAVA_HOME}/bin:$PATH
+      - java -version
       - ./mvnw package -Pstg -DskipTests
       - docker build -t $IMAGE_NAME:$COMMIT .
     before_deploy:
