@@ -6,6 +6,12 @@ language: java
 jdk:
   - openjdk8
 
+addons:
+  sonarcloud:
+    organization: "attestationlegale" # the key of the org you chose at step #3
+    token:
+      secure: "JMH7XqVjDof5zKqwWov9mKT3cuKjuRivoQhf5X07Bp6ZPq/sIHSjPJIfhsx4KH0/wiQirex7ZUoJNkCfpXZpK6KkLyPLoYW810ZxqF5SDyHBmfEkZC2NwL086RU0zQoqoFfIxhT5PNWBqlnIjkPaJyJM4LCvmGFPRL1BKvW9fwJfjD7TP1rE+vJXEKkb7x3Y9BOmgX+AwheD97sjR0UxUpKOGynMLU9YG/7YvgBpjr137b33+qoHDeJrSBsSrC5V0vppKoCOQM2lA7u3CfgLCmW0bh41I27DQiF1eZeld1Dd+PJbcvYJs1gseoOPLRwGneJU+fr3vmwIzpqpRHHby5i8nn1jbaRQvcutxvGvSRdMviMQRc3pGnV4yh2pc54C3p5nG14ECqdU62SkhOzP4LprV/Zw4Ol+orXVJ3W6ukEoQi7o6WStAUdhQ78zcyAVcgSWb1KatuS3j/feGiYkLMZTAlLnewaMBZo9H7h7NcAG+9a27UgfBT3l3R/f7DPe24COT2lcoN6KjshropER4XIAb2txnKXcuJ/3jLeCwHOJ/ZDrPFDrgIzSXO4XJk4dwGIRU6BL1YAFCz4AzjaQ0oxvSXG+uN+okQK6FLyhCtpGaBMPcrLrwCTpl7U/lsN6JhHg0PPQK6NIgFhAayxPxeJnFhS/bsG9mlSc60qrpjc=" # encrypted value of your token; $SONAR_TOKEN could also be used in travis settings
+
 cache:
   pip: true
   directories:
@@ -73,7 +79,7 @@ jobs:
       # - ./service-performance-test.sh
       # - ./service-load-test.sh
       # - ./service-security-test.sh
-      - ./mvnw sonar:sonar -Dsonar.login=$SONAR_LOGIN -Dsonar.password=$SONAR_PASSWORD
+      - ./mvnw clean verify sonar:sonar
       - ./mvnw package -Pstg -DskipTests
       - docker build -t $IMAGE_NAME:$COMMIT .
     before_deploy:

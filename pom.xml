@@ -58,7 +58,7 @@
         <project.testresult.directory>${project.build.directory}/test-results</project.testresult.directory>
         <run.addResources>false</run.addResources>
         <sonar-maven-plugin.version>3.7.0.1746</sonar-maven-plugin.version>
-        <sonar.host.url>https://sonar.attestationlegale.fr</sonar.host.url>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <sonar.projectName>api-pdf-generator</sonar.projectName>
         <sonar.exclusions>src/main/webapp/content/**/*.*,
             src/main/webapp/bower_components/**/*.*, src/main/webapp/i18n/*.js,
