@@ -21,16 +21,20 @@ env:
     - SPRING_JPA_SHOW_SQL=false
     - COMMIT=${TRAVIS_COMMIT::8}
     - IMAGE_NAME=api-pdf-generator
+    - SERVICE_PERF=com-ofa-perf-api-pdf-generator
     - SERVICE_STG=com-ofa-stg-api-pdf-generator
     - SERVICE_PROD=com-ofa-prod-api-pdf-generator
-    - CLUSTER_STG=com-ofa-stg-ecs-cluster
     - SERVICE_DEMO=com-ofa-demo-api-pdf-generator
+    - CLUSTER_PERF=com-ofa-perf-ecs-cluster
+    - CLUSTER_STG=com-ofa-stg-ecs-cluster
     - CLUSTER_DEMO=com-ofa-demo-ecs-cluster
 
 stages:
   - precache # create cache for all stages; to enable only if next stages have several jobs to be executed in parallel
   - name: test-and-deploy-int # execute test and deploy INT environment
-    if: branch != stg AND branch != master AND tag IS blank
+    if: NOT branch IN (PLATINT-4908, stg, master) AND tag IS blank
+  - name: test-and-deploy-perf
+    if: branch = PLATINT-4908 AND tag IS blank
   - name: deploy-stg
     if: branch = stg AND tag IS blank
   - name: deploy-prod
@@ -56,6 +60,7 @@ jobs:
       - ./mvnw package -DskipTests=true -Dmaven.javadoc.skip=true -B -V # Downloading dependencies
     before_script: true
     script: true
+
   ## Executes maven and sonar tests for dev and feature branch only
   - stage: test-and-deploy-int
     name: "Execute tests and deploy to INT"
@@ -99,6 +104,31 @@ jobs:
   #   if: type != pull_request AND branch = dev
   #   install: skip
   #   script: ./mvnw versions:display-dependency-updates -DprocessDependencyManagement=false
+
+  - stage: test-and-deploy-perf
+    name: "Execute tests and deploy to PERF"
+    install:
+      - pip show awscli || pip install --user awscli
+      - export AWSCLI_PATH=$(pip show awscli | grep Location | awk -F " " '{print $2}')
+      - export PATH=$PATH:$AWSCLI_PATH
+      - if [ ! -f  /usr/local/bin/git-crypt ]; then curl -L https://github.com/minrk/git-crypt-bin/releases/download/0.6.0/git-crypt > git-crypt; fi
+      - if [ ! -f  /usr/local/bin/git-crypt ]; then echo "128817a63de17a5af03fe69241e453436c6c286c86dd37fb70ed9b3bf7171d7d  git-crypt" | shasum -a 256 -c -; fi
+      - if [ ! -f  /usr/local/bin/git-crypt ]; then chmod +x git-crypt; fi
+      - if [ ! -f  /usr/local/bin/git-crypt ]; then sudo cp git-crypt /usr/local/bin/; fi
+    script:
+      - ./mvnw clean verify -Pstg -Dcucumber.options="--plugin progress"
+      - docker build -t $IMAGE_NAME:$COMMIT .
+    before_deploy:
+      - export VERSION=`mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec`
+      - curl https://raw.githubusercontent.com/AttestationLegale/ecs-deploy/master/service-deploy.sh > service-deploy.sh
+      - chmod +x service-deploy.sh
+    deploy:
+      - provider: script
+        skip_cleanup: true
+        script: ./service-deploy.sh $VERSION-$TRAVIS_BRANCH $REGISTRY_DEV_URL $SERVICE_PERF $CLUSTER_PERF $AWS_ECS_DEV_DEPLOYER_ACCESS_KEY_ID $AWS_ECS_DEV_DEPLOYER_SECRET_ACCESS_KEY
+        on:
+          branch: PLATINT-4908
+          condition: type != pull_request
 
   - stage: deploy-stg
     name: "Execute performance, security and system integration tests for the PR"
