@@ -64,7 +64,7 @@
         <sonar.projectKey>AttestationLegale_api-pdf-generator</sonar.projectKey>
         <sonar.exclusions>src/main/webapp/content/**/*.*,
             src/main/webapp/bower_components/**/*.*, src/main/webapp/i18n/*.js,
-            target/www/**/*.*</sonar.exclusions>
+            target/www/**/*.*, src/main/resources/config/liquibase/changelog/*</sonar.exclusions>
 
         <sonar.issue.ignore.multicriteria>S3437,UndocumentedApi,BoldAndItalicTagsCheck</sonar.issue.ignore.multicriteria>
 
