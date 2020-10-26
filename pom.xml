@@ -13,7 +13,7 @@
 
     <groupId>com.onceforall</groupId>
     <artifactId>api-pdf-generator</artifactId>
-    <version>2.17</version>
+    <version>2.18</version>
     <packaging>war</packaging>
     <name>pdf-generator</name>
 
@@ -41,7 +41,7 @@
         <commons-lang.version>3.7</commons-lang.version>
         <elasticsearch.version>5.6.3</elasticsearch.version>
         <guava.version>25.1-jre</guava.version>
-        <jacoco-maven-plugin.version>0.7.9</jacoco-maven-plugin.version>
+        <jacoco-maven-plugin.version>0.8.6</jacoco-maven-plugin.version>
         <javassist.version>3.22.0-GA</javassist.version>
         <liquibase-hibernate5.version>3.6</liquibase-hibernate5.version>
         <nuxeo.client.version>3.0.1</nuxeo.client.version>
@@ -57,9 +57,11 @@
         <!-- Sonar properties -->
         <project.testresult.directory>${project.build.directory}/test-results</project.testresult.directory>
         <run.addResources>false</run.addResources>
-        <sonar-maven-plugin.version>3.2</sonar-maven-plugin.version>
-        <sonar.host.url>https://sonar.attestationlegale.fr</sonar.host.url>
+        <sonar-maven-plugin.version>3.7.0.1746</sonar-maven-plugin.version>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.organization>attestationlegale</sonar.organization>
         <sonar.projectName>api-pdf-generator</sonar.projectName>
+        <sonar.projectKey>AttestationLegale_api-pdf-generator</sonar.projectKey>
         <sonar.exclusions>src/main/webapp/content/**/*.*,
             src/main/webapp/bower_components/**/*.*, src/main/webapp/i18n/*.js,
             target/www/**/*.*</sonar.exclusions>
@@ -81,17 +83,12 @@
         <sonar.issue.ignore.multicriteria.UndocumentedApi.resourceKey>src/main/java/**/*</sonar.issue.ignore.multicriteria.UndocumentedApi.resourceKey>
         <sonar.issue.ignore.multicriteria.UndocumentedApi.ruleKey>squid:UndocumentedApi</sonar.issue.ignore.multicriteria.UndocumentedApi.ruleKey>
 
-        <sonar.jacoco.reportPaths>${project.testresult.directory}/coverage/jacoco/jacoco.exec,
-            ${project.testresult.directory}/coverage/jacoco/jacoco-it.exec</sonar.jacoco.reportPaths>
         <sonar.java.codeCoveragePlugin>jacoco</sonar.java.codeCoveragePlugin>
 
         <sonar.javascript.jstestdriver.reportsPath>${project.testresult.directory}/karma</sonar.javascript.jstestdriver.reportsPath>
-        <!-- For Sonar < 6.2 -->
-        <sonar.javascript.lcov.reportPath>${project.testresult.directory}/coverage/report-lcov/lcov.info</sonar.javascript.lcov.reportPath>
-        <!-- For Sonar >= 6.2 -->
         <sonar.javascript.lcov.reportPaths>${project.testresult.directory}/coverage/report-lcov/lcov.info</sonar.javascript.lcov.reportPaths>
 
-        <sonar.sources>${project.basedir}/src/main/</sonar.sources>
+        <sonar.sources>src/main/java,src/main/resources</sonar.sources>
         <sonar.surefire.reportsPath>${project.testresult.directory}/surefire-reports</sonar.surefire.reportsPath>
         <sonar.tests>${project.basedir}/src/test/</sonar.tests>
     </properties>
@@ -464,27 +461,16 @@
                 <version>${jacoco-maven-plugin.version}</version>
                 <executions>
                     <execution>
-                        <id>pre-unit-tests</id>
+                        <id>prepare-agent</id>
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
-                        <configuration>
-                            <!-- Sets the path to the file which contains the execution data. -->
-                            <destFile>${project.testresult.directory}/coverage/jacoco/jacoco.exec</destFile>
-                        </configuration>
                     </execution>
-                    <!-- Ensures that the code coverage report for unit tests is created
-                        after unit tests have been run -->
                     <execution>
-                        <id>post-unit-test</id>
-                        <phase>test</phase>
+                        <id>report</id>
                         <goals>
                             <goal>report</goal>
                         </goals>
-                        <configuration>
-                            <dataFile>${project.testresult.directory}/coverage/jacoco/jacoco.exec</dataFile>
-                            <outputDirectory>${project.testresult.directory}/coverage/jacoco</outputDirectory>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
