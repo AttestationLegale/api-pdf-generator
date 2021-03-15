@@ -681,6 +681,10 @@
                 <digitsOnlyDevVersion>true</digitsOnlyDevVersion>
                 <skipTag>true</skipTag>
                 <skipTestProject>true</skipTestProject>
+                <!-- log configuration -->
+                <logback.loglevel>DEBUG</logback.loglevel>
+                <!-- default Spring profiles -->
+                <spring.profiles.active>dev</spring.profiles.active>
             </properties>
         </profile>
         <profile>
@@ -700,6 +704,36 @@
                     </plugin>
                 </plugins>
             </build>
+            <properties>
+                <!-- log configuration -->
+                <logback.loglevel>DEBUG</logback.loglevel>
+                <!-- default Spring profiles -->
+                <spring.profiles.active>dev</spring.profiles.active>
+            </properties>
+        </profile>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.amashchenko.maven.plugin</groupId>
+                        <artifactId>gitflow-maven-plugin</artifactId>
+                        <version>1.15.1</version>
+                        <configuration>
+                            <gitFlowConfig>
+                                <productionBranch>master</productionBranch>
+                                <developmentBranch>dev</developmentBranch>
+                            </gitFlowConfig>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+            <properties>
+                <!-- gitflow release plugin configuration -->
+                <digitsOnlyDevVersion>true</digitsOnlyDevVersion>
+                <skipTestProject>true</skipTestProject>
+                <versionDigitToIncrement>1</versionDigitToIncrement>
+            </properties>
         </profile>
     </profiles>
 </project>
