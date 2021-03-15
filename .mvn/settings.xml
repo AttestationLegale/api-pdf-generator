@@ -11,4 +11,8 @@
         <mirrorOf>spring-milestones</mirrorOf>
         </mirror>
     </mirrors>
+
+    <pluginGroups>
+      <pluginGroup>com.amashchenko.maven.plugin</pluginGroup>
+   </pluginGroups>
 </settings>
