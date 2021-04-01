@@ -144,3 +144,8 @@ Desktop.ini
 # Deploy script
 #####################
 ecs-deploy
+
+#####################
+# SDKMAN profile
+#####################
+.sdkmanrc
