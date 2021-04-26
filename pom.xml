@@ -37,7 +37,7 @@
         <jhipster-dependencies.version>2.0.4</jhipster-dependencies.version>
 
         <assertj.version>3.10.0</assertj.version>
-        <commons-io.version>2.6</commons-io.version>
+        <commons-io.version>2.7</commons-io.version>
         <commons-lang.version>3.7</commons-lang.version>
         <elasticsearch.version>5.6.3</elasticsearch.version>
         <guava.version>25.1-jre</guava.version>
