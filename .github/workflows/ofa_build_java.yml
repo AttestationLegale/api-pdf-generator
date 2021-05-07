@@ -96,14 +96,6 @@ jobs:
             -   name: "Init common env vars"
                 uses: FranzDiebold/github-env-vars-action@v2
 
-            -   name: "Load ofa_environment"
-                uses: Steph0/dotenv-configserver@v1
-                with:
-                    repository: "AttestationLegale/ofa_delivery_configserver"
-                    token: ${{ secrets.ACTIONS_ACCESS_TOKEN  }}
-                    directory: "${{ env.CI_REPOSITORY_NAME }}"
-                    profile: "${{ env.OFA_ENV }}"
-
             -   name: "Init application runtime env vars"
                 id: init_env
                 run: |
@@ -140,10 +132,10 @@ jobs:
                     echo "Exported APP_VERSION:[${VERSION}]"
 
                     # Get env related secrets
-                    echo "AWS_ECS_SERVICE_DEPLOYER_ACCESS_KEY_ID=$(echo ${{ secrets[format('{0}', env.AWS_ECS_SERVICE_DEPLOYER_ACCESS_KEY_ID_SECRET_NAME)] }})" >> $GITHUB_ENV
+                    echo "AWS_ECS_SERVICE_DEPLOYER_ACCESS_KEY_ID=$(echo ${{ secrets[format('{0}', secrets.AWS_ECS_SERVICE_DEPLOYER_ACCESS_KEY_ID_SECRET_NAME)] }})" >> $GITHUB_ENV
                     echo "Exported AWS_ECS_SERVICE_DEPLOYER_ACCESS_KEY_ID secret"
 
-                    echo "AWS_ECS_SERVICE_DEPLOYER_SECRET_ACCESS_KEY=$(echo ${{ secrets[format('{0}', env.AWS_ECS_SERVICE_DEPLOYER_SECRET_ACCESS_KEY_SECRET_NAME)] }})" >> $GITHUB_ENV
+                    echo "AWS_ECS_SERVICE_DEPLOYER_SECRET_ACCESS_KEY=$(echo ${{ secrets[format('{0}', secrets.AWS_ECS_SERVICE_DEPLOYER_SECRET_ACCESS_KEY_SECRET_NAME)] }})" >> $GITHUB_ENV
                     echo "Exported AWS_ECS_SERVICE_DEPLOYER_SECRET_ACCESS_KEY secret"
                 shell: bash
 
@@ -154,7 +146,7 @@ jobs:
                 with:
                     aws-access-key-id: ${{ secrets.AWS_PROD_ACCESS_KEY_ID }}
                     aws-secret-access-key: ${{ secrets.AWS_PROD_SECRET_ACCESS_KEY }}
-                    aws-region: ${{ env.AWS_REGION }}
+                    aws-region: ${{ secrets.AWS_REGION }}
 
             -   name: Login to Amazon ECR
                 id: login_ecr_prod_key
@@ -165,9 +157,9 @@ jobs:
                 id: aws_creds_dev_deployer
                 uses: aws-actions/configure-aws-credentials@v1
                 with:
-                    aws-access-key-id: ${{ env.AWS_ECS_SERVICE_DEPLOYER_ACCESS_KEY_ID }}
-                    aws-secret-access-key: ${{ env.AWS_ECS_SERVICE_DEPLOYER_SECRET_ACCESS_KEY }}
-                    aws-region: ${{ env.AWS_REGION }}
+                    aws-access-key-id: ${{ secrets.AWS_ECS_SERVICE_DEPLOYER_ACCESS_KEY_ID }}
+                    aws-secret-access-key: ${{ secrets.AWS_ECS_SERVICE_DEPLOYER_SECRET_ACCESS_KEY }}
+                    aws-region: ${{ secrets.AWS_REGION }}
 
             -   name: "Login to Amazon ECR"
                 id: login_ecr_dev_deployer
@@ -205,10 +197,10 @@ jobs:
                     platforms: linux/amd64
                     # Requires full tag to push to AWS
                     tags: |
-                        ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ env.REGISTRY_NAME }}:${{ env.APP_VERSION }}
-                        ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ env.REGISTRY_NAME }}:${{ env.IMAGE_PREFIX }}${{ env.APP_VERSION }}
-                        ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ env.REGISTRY_NAME }}:latest
-                        ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ env.REGISTRY_NAME }}:github-${{ env.CI_SHA_SHORT }}
+                        ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ secrets.REGISTRY_NAME }}:${{ env.APP_VERSION }}
+                        ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ secrets.REGISTRY_NAME }}:${{ env.IMAGE_PREFIX }}${{ env.APP_VERSION }}
+                        ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ secrets.REGISTRY_NAME }}:latest
+                        ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ secrets.REGISTRY_NAME }}:github-${{ env.CI_SHA_SHORT }}
                     cache-from: type=local,src=/tmp/.buildx-cache
                     cache-to: type=local,dest=/tmp/.buildx-cache-new
 
@@ -229,30 +221,30 @@ jobs:
                     curl https://raw.githubusercontent.com/AttestationLegale/ecs-deploy/master/ecs-deploy > ./ecs-deploy
                     chmod +x ecs-deploy
                     ./ecs-deploy \
-                        -n ${{ env.SERVICE }} \
-                        -c ${{ env.CLUSTER }} \
-                        -i ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ env.REGISTRY_NAME }}:latest \
-                        -r ${{ env.AWS_REGION }} \
-                        -k ${{ env.AWS_ECS_SERVICE_DEPLOYER_ACCESS_KEY_ID }} \
-                        -s ${{ env.AWS_ECS_SERVICE_DEPLOYER_SECRET_ACCESS_KEY }} \
+                        -n ${{ secrets.SERVICE }} \
+                        -c ${{ secrets.CLUSTER }} \
+                        -i ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ secrets.REGISTRY_NAME }}:latest \
+                        -r ${{ secrets.AWS_REGION }} \
+                        -k ${{ secrets.AWS_ECS_SERVICE_DEPLOYER_ACCESS_KEY_ID }} \
+                        -s ${{ secrets.AWS_ECS_SERVICE_DEPLOYER_SECRET_ACCESS_KEY }} \
                         --force-new-deployment \
                         --skip-deployments-check
                 shell: bash
 
             -   name: "Set current date as env variable"
                 id: current_date
-                if: ${{ success() && env.GIST_ID && env.PERFORM_DEPLOY == 'true' }}
+                if: ${{ success() && secrets.GIST_ID && env.PERFORM_DEPLOY == 'true' }}
                 run: echo "NOW=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
 
             -   name: "Create deployment badge"
                 uses: schneegans/dynamic-badges-action@v1.0.0
-                if: ${{ success() && env.GIST_ID && env.PERFORM_DEPLOY == 'true' }}
+                if: ${{ success() && secrets.GIST_ID && env.PERFORM_DEPLOY == 'true' }}
                 # Not failing workflow for a badge
                 continue-on-error: true
                 with:
                     auth: ${{ secrets.GIST_BADGE }}
-                    gistID: ${{ env.GIST_ID }}
-                    filename: ${{ env.GIST_FILENAME }}
+                    gistID: ${{ secrets.GIST_ID }}
+                    filename: ${{ secrets.GIST_FILENAME }}
                     namedLogo: "amazon"
                     label: "${{ env.ENV_NAME }} - ref:[${{ env.REPO_BRANCH }}] - ${{ env.NOW }}"
                     message: ${{ env.APP_VERSION }}
