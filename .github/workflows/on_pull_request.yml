@@ -1,0 +1,126 @@
+############################################################
+# Proxy workflow that orchestrate platform specific actions
+############################################################
+
+# Controls when the action will run. Workflow runs when manually triggered using the UI
+# or API.
+name: "Auto run PR checks"
+
+on: ['pull_request']
+
+env:
+    OFA_ENV: "integration"
+
+# This duplicates codes from `ofa_test_java.yml`
+# Reason is that I am waiting for nektos/act 0.2.22 to be released
+# to move to composite actions
+jobs:
+    # This pre-job allows to save minutes (and by so, money) in case of duplicated runs
+    pre_job:
+        continue-on-error: true
+        runs-on: ubuntu-latest
+        name: "Cancel previous branch jobs"
+        timeout-minutes: 5
+        steps:
+            -   name: "Cancel duplicate runs"
+                id: skip_check
+                uses: fkirc/skip-duplicate-actions@master
+                with:
+                    cancel_others: true
+                    concurrent_skipping: "always"
+                    github_token: ${{ secrets.ACTIONS_ACCESS_TOKEN  }}
+
+    ofa_test_job:
+        runs-on: ubuntu-latest
+        name: "PR Application quality"
+        timeout-minutes: 15
+        steps:
+            # To use this repository's private action, you must check out the repository
+            -   name: "Checkout"
+                id: checkout
+                uses: actions/checkout@v2
+                with:
+                    ref: "${{ github.event.pull_request.head.sha }}"
+                    token: ${{ secrets.ACTIONS_ACCESS_TOKEN  }}
+
+            # Provides useful common env vars (like repository name)
+            -   name: "Init common env vars"
+                uses: FranzDiebold/github-env-vars-action@v2
+
+            -   name: "Load ofa_environment"
+                uses: Steph0/dotenv-configserver@v1
+                with:
+                    repository: "AttestationLegale/ofa_delivery_configserver"
+                    token: ${{ secrets.ACTIONS_ACCESS_TOKEN  }}
+                    directory: "${{ env.CI_REPOSITORY_NAME }}"
+                    profile: "${{ env.OFA_ENV }}"
+
+            -   name: "Init env"
+                id: init_env
+                run: |
+                    # Get env related secrets
+                    echo "AWS_ACCESS_KEY_ID=$(echo ${{ secrets[format('{0}', env.AWS_ACCESS_KEY_ID_SECRET_NAME)] }})" >> $GITHUB_ENV
+                    echo "Exported AWS_ACCESS_KEY_ID secret"
+
+                    echo "AWS_SECRET_ACCESS_KEY=$(echo ${{ secrets[format('{0}', env.AWS_SECRET_ACCESS_KEY_SECRET_NAME)] }})" >> $GITHUB_ENV
+                    echo "Exported AWS_SECRET_ACCESS_KEY secret"
+                shell: bash
+
+            -   name: "Configure AWS credentials"
+                id: aws_creds
+                uses: aws-actions/configure-aws-credentials@v1
+                with:
+                    aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+                    aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+                    aws-region: ${{ env.AWS_REGION }}
+
+            -   name: "Login to Amazon ECR"
+                id: login_ecr
+                uses: aws-actions/amazon-ecr-login@v1
+
+            -   name: "Switch to application JDK"
+                id: switch_to_application_jdk
+                uses: actions/setup-java@v1
+                with:
+                    java-version: "${{ env.APP_JDK_VERSION }}"
+                    architecture: x64
+
+            -   name: "Cache local Maven repository"
+                id: cache_maven
+                uses: actions/cache@v2
+                with:
+                    path: ~/.m2/repository
+                    key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+                    restore-keys: |
+                        ${{ runner.os }}-maven-
+
+            -   name: "Application test"
+                id: application_tests
+                run: |
+                    export MAVEN_OFA_USERNAME=${{ secrets.MAVEN_OFA_USERNAME }}
+                    export MAVEN_OFA_PASSWORD=${{ secrets.MAVEN_OFA_PASSWORD }}
+                    ./mvnw --batch-mode clean test
+
+            -   name: "Jacoco report"
+                id: jacoco
+                run: ./mvnw --batch-mode clean jacoco:prepare-agent verify -Dcucumber.options="--plugin progress" jacoco:report
+
+            -   name: Set up JDK 11
+                id: switch_to_sonar_jdk
+                uses: actions/setup-java@v1
+                with:
+                    java-version: "11"
+                    architecture: x64
+
+            -   name: Build and analyze
+                run: ./mvnw --batch-mode sonar:sonar
+                env:
+                    # Needed to get some information about the pull request, if any
+                    GITHUB_TOKEN: ${{ secrets.ACTIONS_ACCESS_TOKEN }}
+                    # SonarCloud access token should be generated from https://sonarcloud.io/account/security/
+                    SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+            -   name: Logout of Amazon ECR
+                if: always()
+                run: docker logout ${{ steps.login_ecr.outputs.registry }}
+
