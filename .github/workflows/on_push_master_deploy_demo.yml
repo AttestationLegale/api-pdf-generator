@@ -1,4 +1,11 @@
 ############################################################
+#
+#   WARNING: This repository has a specific CI/CD pipeline
+#   due to its OpenSource status
+#
+############################################################
+
+############################################################
 # Proxy workflow that orchestrate platform specific actions
 ############################################################
 

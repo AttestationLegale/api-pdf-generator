@@ -1,4 +1,11 @@
 ############################################################
+#
+#   WARNING: This repository has a specific CI/CD pipeline
+#   due to its OpenSource status
+#
+############################################################
+
+############################################################
 # Agnostic workflow (usually triggered by others)
 # Runs Java 8 applications build and deploy for any branch/env
 #

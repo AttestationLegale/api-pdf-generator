@@ -1,4 +1,11 @@
 ############################################################
+#
+#   WARNING: This repository has a specific CI/CD pipeline
+#   due to its OpenSource status
+#
+############################################################
+
+############################################################
 # IMPORTANT: this job is referenced in OFA delivery tools
 # @see https://github.com/AttestationLegale/ofa_platform-resources
 ############################################################
