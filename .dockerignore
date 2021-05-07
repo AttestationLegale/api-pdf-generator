@@ -1,0 +1,5 @@
+# This file avoids to send unecessary files to docker and has consequent performance impacts
+.git
+src/docs
+mvnw.cmd
+.travis.yml

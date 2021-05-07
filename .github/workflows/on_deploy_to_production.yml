@@ -1,0 +1,141 @@
+############################################################
+# IMPORTANT: this job is referenced in OFA delivery tools
+# @see https://github.com/AttestationLegale/ofa_platform-resources
+############################################################
+
+# Controls when the action will run. Workflow runs when manually triggered using the UI
+# or API.
+name: "Manual deploy to production"
+
+on:
+    workflow_dispatch:
+        # Inputs the workflow accepts.
+        inputs:
+            source_branch:
+                description: "Source branch to deploy to PRODUCTION:"
+                required: true
+                default: "master"
+            perform_deployment:
+                description: "Perform deployment (dry-run = false):"
+                required: true
+                default: "false"
+            image_prefix:
+                description: "Tag an image with a prefix (ex: 'RC-' = 'RC-X.Y.Z'):"
+                required: false
+                default: "RELEASE-"
+    # Continuous delivery deactivated for now (team decision)
+    # push:
+    #     branches:
+    #         - master
+
+env:
+    SOURCE_BRANCH: "master"
+    IMAGE_PREFIX: "RELEASE-"
+    # Tests + build image with(out) updating AWS task definition
+    PERFORM_DEPLOYMENT: "false"
+    ENV_NAME: "production"
+
+jobs:
+    # This pre-job allows to save minutes (and by so, money) in case of duplicated runs
+    pre_job:
+        continue-on-error: true
+        runs-on: ubuntu-latest
+        name: "Cancel previous branch jobs"
+        timeout-minutes: 5
+        steps:
+            -   name: "Cancel duplicate runs"
+                id: skip_check
+                uses: fkirc/skip-duplicate-actions@master
+                with:
+                    cancel_others: true
+                    concurrent_skipping: "always"
+                    github_token: ${{ secrets.ACTIONS_ACCESS_TOKEN  }}
+
+    # Defines runtime variables depending on context
+    init_env_job:
+        runs-on: ubuntu-latest
+        name: "Init env from context"
+        timeout-minutes: 5
+        steps:
+            -   name: "Init env"
+                id: init_env
+                run: |
+                    # Use user's input 'source_branch' if given
+                    if [[ -n "${{ github.event.inputs.source_branch }}" ]]; then
+                        echo "Using source_branch=${{ github.event.inputs.source_branch }} given in input"
+                        echo "SOURCE_BRANCH=$(echo ${{ github.event.inputs.source_branch }})" >> $GITHUB_ENV
+                    else
+                        echo "Wil use default SOURCE_BRANCH=${{ env.SOURCE_BRANCH }}"
+                    fi
+
+                    # Use user's input 'image_prefix' if given
+                    if [[ -n "${{ github.event.inputs.image_prefix }}" ]]; then
+                        echo "Using image_prefix=${{ github.event.inputs.image_prefix }} given in input"
+                        echo "IMAGE_PREFIX=$(echo ${{ github.event.inputs.image_prefix }})" >> $GITHUB_ENV
+                    else
+                        echo "Wil use default IMAGE_PREFIX=${{ env.IMAGE_PREFIX }}"
+                    fi
+
+                    # Use user's input 'perform_deployment' if given
+                    if [[ -n "${{ github.event.inputs.perform_deployment }}" ]]; then
+                        echo "Using perform_deployment=${{ github.event.inputs.perform_deployment }} given in input"
+                        echo "PERFORM_DEPLOYMENT=$(echo ${{ github.event.inputs.perform_deployment }})" >> $GITHUB_ENV
+                    else
+                        echo "Wil use default perform_deployment=${{ env.PERFORM_DEPLOYMENT }}"
+                    fi
+                shell: bash
+
+    on_deploy_to_production_test_workflow:
+        runs-on: ubuntu-latest
+        name: "Test production branch"
+        timeout-minutes: 5
+        steps:
+            # Provides useful common env vars (like repository name)
+            -   name: "Init common env vars"
+                uses: FranzDiebold/github-env-vars-action@v2
+
+            -   name: "Trigger tests of production branch"
+                uses: convictional/trigger-workflow-and-wait@v1.3.0
+                with:
+                    owner: ${{ env.CI_REPOSITORY_OWNER }}
+                    repo: ${{ env.CI_REPOSITORY_NAME }}
+                    github_token: ${{ secrets.ACTIONS_ACCESS_TOKEN }}
+                    workflow_file_name: ofa_test_java.yml
+                    ref: ${{ env.SOURCE_BRANCH }}
+                    inputs: '{
+                        "repository_branch": "${{ env.SOURCE_BRANCH }}",
+                        "ofa_environment": "${{ env.ENV_NAME }}"
+                    }'
+                    propagate_failure: true
+                    trigger_workflow: true
+                    wait_workflow: false
+
+
+
+    on_deploy_to_production_workflow:
+        runs-on: ubuntu-latest
+        name: "Deploy production branch"
+        timeout-minutes: 5
+        steps:
+            # Provides useful common env vars (like repository name)
+            -   name: "Init common env vars"
+                uses: FranzDiebold/github-env-vars-action@v2
+
+            -   name: "Trigger deployment to production"
+                uses: convictional/trigger-workflow-and-wait@v1.3.0
+                with:
+                    owner: ${{ env.CI_REPOSITORY_OWNER }}
+                    repo: ${{ env.CI_REPOSITORY_NAME }}
+                    github_token: ${{ secrets.ACTIONS_ACCESS_TOKEN }}
+                    workflow_file_name: ofa_build_java.yml
+                    ref: ${{ env.SOURCE_BRANCH }}
+                    inputs: '{
+                        "repository_branch": "${{ env.SOURCE_BRANCH }}",
+                        "ofa_environment": "${{ env.ENV_NAME }}",
+                        "perform_deployment": "${{ env.PERFORM_DEPLOYMENT }}",
+                        "image_prefix": "${{ env.IMAGE_PREFIX }}"
+                    }'
+                    propagate_failure: true
+                    trigger_workflow: true
+                    wait_workflow: false
+
