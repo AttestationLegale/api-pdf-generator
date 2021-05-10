@@ -192,8 +192,7 @@ jobs:
                         -r ${{ secrets.AWS_REGION }} \
                         -k ${{ secrets.AWS_ECS_SERVICE_DEPLOYER_ACCESS_KEY_ID }} \
                         -s ${{ secrets.AWS_ECS_SERVICE_DEPLOYER_SECRET_ACCESS_KEY }} \
-                        --force-new-deployment \
-                        --skip-deployments-check
+                        --verbose
                 shell: bash
 
             -   name: "Set current date as env variable"
