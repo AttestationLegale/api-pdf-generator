@@ -195,6 +195,7 @@ jobs:
                         -r ${{ secrets.AWS_REGION }} \
                         -k ${{ secrets.AWS_ECS_SERVICE_DEPLOYER_ACCESS_KEY_ID }} \
                         -s ${{ secrets.AWS_ECS_SERVICE_DEPLOYER_SECRET_ACCESS_KEY }} \
+                        -t 5 \
                         --verbose
                 shell: bash
 
