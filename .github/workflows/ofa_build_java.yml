@@ -180,8 +180,11 @@ jobs:
                     mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
             -   name: "Deploy to ECS"
-                if: ${{ env.PERFORM_DEPLOY == 'true' }}
                 id: aws_task_deployment
+                # Travis ignored error on ecs-deploy like the $TIMEOUT
+                # that can trigger a false positive exit 1 at line 430
+                continue-on-error: true
+                if: ${{ env.PERFORM_DEPLOY == 'true' }}
                 run: |
                     curl https://raw.githubusercontent.com/AttestationLegale/ecs-deploy/master/ecs-deploy > ./ecs-deploy
                     chmod +x ecs-deploy
