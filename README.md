@@ -1,4 +1,13 @@
 # pdf-generator
+
+[![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/ALGMachine/76211039a484570425e2c336e01a53f4/raw/badge_api_pdf_generator_deployment_production.json)](https://github.com/AttestationLegale/api-pdf-generator/actions)
+
+[![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/ALGMachine/582fdbdc0cc4dc93908b1175f5cd56d8/raw/badge_api_pdf_generator_deployment_staging.json)](https://github.com/AttestationLegale/api-pdf-generator/actions)
+
+[![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/ALGMachine/891c66600c9a6b36b3de73247bc9138f/raw/badge_api_pdf_generator_deployment_integration.json)](https://github.com/AttestationLegale/api-pdf-generator/actions)
+
+[![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/ALGMachine/43db75352a092a75b0f68d8c0cf32171/raw/badge_api_pdf_generator_deployment_demo.json)](https://github.com/AttestationLegale/api-pdf-generator/actions)
+
 The documentation is available here: https://confluence.attestationlegale.fr/display/OFA/PDF+Generator
 
 This application was generated using JHipster 4.5.3, you can find documentation and help at [https://jhipster.github.io/documentation-archive/v4.5.3](https://jhipster.github.io/documentation-archive/v4.5.3).
@@ -81,4 +90,21 @@ To configure CI for your project, run the ci-cd sub-generator (`jhipster ci-cd`)
 [Running tests page]: https://jhipster.github.io/documentation-archive/v4.5.3/running-tests/
 [Setting up Continuous Integration]: https://jhipster.github.io/documentation-archive/v4.5.3/setting-up-ci/
 
+## Github actions
 
+Hosted in `.github` folder. Available in the Actions tab in Github repository.
+You can test actions locally using [ACT](https://github.com/nektos/act)
+
+Example:
+
+    ```bash
+    # List workflows
+    act -l
+
+    # Trigger workflow
+    # Using 'nektos/act-environments-ubuntu:18.04' ensures having ~runner as Github, bt it is 18 GB
+    # NEVER COMMIT YOUR SECRETS FILES
+    # .github/workflows/build.secrets contains all secrets needed (like in repo's secrets)
+    # .github/workflows/events/ofa_build_java.event replaces workflows inputs (mandatory in local)
+    act workflow_dispatch -P ubuntu-latest=nektos/act-environments-ubuntu:18.04 --secret-file .github/workflows/build.secrets -W .github/workflows/ofa_build_java.yml -e .github/workflows/events/ofa_build_java.event
+    ```

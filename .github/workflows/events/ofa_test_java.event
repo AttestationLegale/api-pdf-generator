@@ -1,0 +1,7 @@
+{
+  "action": "workflow_dispatch",
+  "inputs": {
+      "repository_branch": "dev",
+      "ofa_environment": "integration"
+  }
+}

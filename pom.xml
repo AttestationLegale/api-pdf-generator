@@ -13,7 +13,7 @@
 
     <groupId>com.onceforall</groupId>
     <artifactId>api-pdf-generator</artifactId>
-    <version>2.26.0</version>
+    <version>2.27.0</version>
     <packaging>war</packaging>
     <name>pdf-generator</name>
 
@@ -660,65 +660,13 @@
             </properties>
         </profile>
         <profile>
-            <id>deploy-stg</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>com.amashchenko.maven.plugin</groupId>
-                        <artifactId>gitflow-maven-plugin</artifactId>
-                        <version>1.15.1</version>
-                        <configuration>
-                            <gitFlowConfig>
-                                <productionBranch>stg</productionBranch>
-                                <developmentBranch>dev</developmentBranch>
-                            </gitFlowConfig>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-            <properties>
-                <!-- gitflow release plugin configuration -->
-                <digitsOnlyDevVersion>true</digitsOnlyDevVersion>
-                <skipTag>true</skipTag>
-                <skipTestProject>true</skipTestProject>
-                <!-- log configuration -->
-                <logback.loglevel>DEBUG</logback.loglevel>
-                <!-- default Spring profiles -->
-                <spring.profiles.active>dev</spring.profiles.active>
-            </properties>
-        </profile>
-        <profile>
-            <id>deploy-prod</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>com.amashchenko.maven.plugin</groupId>
-                        <artifactId>gitflow-maven-plugin</artifactId>
-                        <version>1.15.1</version>
-                        <configuration>
-                            <gitFlowConfig>
-                                <productionBranch>master</productionBranch>
-                                <developmentBranch>stg</developmentBranch>
-                            </gitFlowConfig>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-            <properties>
-                <!-- log configuration -->
-                <logback.loglevel>DEBUG</logback.loglevel>
-                <!-- default Spring profiles -->
-                <spring.profiles.active>dev</spring.profiles.active>
-            </properties>
-        </profile>
-        <profile>
             <id>release</id>
             <build>
                 <plugins>
                     <plugin>
                         <groupId>com.amashchenko.maven.plugin</groupId>
                         <artifactId>gitflow-maven-plugin</artifactId>
-                        <version>1.15.1</version>
+                        <version>1.16.0</version>
                         <configuration>
                             <gitFlowConfig>
                                 <productionBranch>master</productionBranch>

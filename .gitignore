@@ -149,3 +149,11 @@ ecs-deploy
 # SDKMAN profile
 #####################
 .sdkmanrc
+
+#####################
+# Secrets
+#####################
+*.secrets
+*.secret
+
+
