@@ -41,5 +41,6 @@ EXPOSE 8080
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD export TEST_ENV=$LOCAL_IP && \
+    export $(grep -v '^#' /shared/app.env | xargs -d '\n') && \
     export DATADOG_TRACE_AGENT_HOSTNAME=$(curl --retry 5 --connect-timeout 3 -s 169.254.169.254/latest/meta-data/local-ipv4) && \
 java -javaagent:/user/local/lib/dd-java-agent.jar ${JAVA_OPTS} -Ddd.agent.host=172.17.0.1 -Ddd.agent.port=8126 -Djava.security.egd=file:/dev/./urandom -jar /app.war
