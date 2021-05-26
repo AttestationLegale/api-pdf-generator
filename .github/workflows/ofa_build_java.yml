@@ -159,7 +159,7 @@ jobs:
                     file: Dockerfile
                     build-args: |
                         APP_HOME=./
-                        MVN_PROFILE=${{ env.MVN_PROFILE }}
+                        MVN_PROFILE=${{ secrets.MVN_PROFILE }}
                     platforms: linux/amd64
                     # Requires full tag to push to AWS
                     tags: |
