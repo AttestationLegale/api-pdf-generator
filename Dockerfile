@@ -27,7 +27,6 @@ ARG APP_HOME=/tmp/build/
 ENV SPRING_OUTPUT_ANSI_ENABLED=NEVER \
     JAVA_OPTS="-Xmx256m" \
     # Datadog ENV
-    JAVA_AGENT="-javaagent:/opt/jboss/keycloak/shared/dd-java-agent.jar" \
     DD_PROFILING_ENABLED="false" \
     ## DD_ENV, DD_SERVICE, DD_VERSION should be filled at build or runtime
     DD_ENV="none" \
