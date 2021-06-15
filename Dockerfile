@@ -11,11 +11,15 @@ ADD . .
 # Build dynamic env and application
 # Please provide secrets: MAVEN_OFA_USERNAME, MAVEN_OFA_PASSWORD
 RUN mkdir -p /shared/ \
+    && chmod -R 544 /shared \
     && ./mvnw package -P${MVN_PROFILE} -DskipTests=true -Dmaven.javadoc.skip=true -B -V \
     && echo "DD_VERSION=$(./mvnw org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate \
         -Dexpression=project.version -q -DforceStdout)" >> /shared/app.env \
     && echo "DD_SERVICE=$(./mvnw org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate \
         -Dexpression=project.artifactId -q -DforceStdout)" >> /shared/app.env
+
+# Datadog java agent install
+ADD https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=com.datadoghq&a=dd-java-agent&v=LATEST /shared/dd-java-agent.jar
 
 #########################################################################################################
 FROM openjdk:8-jdk-alpine
