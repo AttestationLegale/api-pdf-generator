@@ -102,7 +102,7 @@ jobs:
                 uses: FranzDiebold/github-env-vars-action@v2
 
             -   name: "Trigger tests"
-                uses: convictional/trigger-workflow-and-wait@v1.3.0
+                uses: convictional/trigger-workflow-and-wait@v1.4.0
                 with:
                     owner: ${{ env.CI_REPOSITORY_OWNER }}
                     repo: ${{ env.CI_REPOSITORY_NAME }}
@@ -127,7 +127,7 @@ jobs:
                 uses: FranzDiebold/github-env-vars-action@v2
 
             -   name: "Trigger deployment"
-                uses: convictional/trigger-workflow-and-wait@v1.3.0
+                uses: convictional/trigger-workflow-and-wait@v1.4.0
                 with:
                     owner: ${{ env.CI_REPOSITORY_OWNER }}
                     repo: ${{ env.CI_REPOSITORY_NAME }}
