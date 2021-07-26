@@ -90,7 +90,19 @@ jobs:
                     fi
                 shell: bash
 
+            -   name: "Debug"
+                run: |
+                    echo "Will use SOURCE_BRANCH=${{ env.SOURCE_BRANCH }}"
+                    echo "Will use IMAGE_PREFIX=${{ env.IMAGE_PREFIX }}"
+                    echo "Will use PERFORM_DEPLOYMENT=${{ env.PERFORM_DEPLOYMENT }}"
+                shell: bash
+        outputs:
+          SOURCE_BRANCH: ${{ env.SOURCE_BRANCH }}
+          IMAGE_PREFIX: ${{ env.IMAGE_PREFIX }}
+          PERFORM_DEPLOYMENT: ${{ env.PERFORM_DEPLOYMENT }}
+
     on_deploy_master_to_demo_workflow:
+        needs: init_env_job
         runs-on: ubuntu-latest
         name: "Deploy master branch to demo"
         timeout-minutes: 5
@@ -106,12 +118,12 @@ jobs:
                     repo: ${{ env.CI_REPOSITORY_NAME }}
                     github_token: ${{ secrets.ACTIONS_ACCESS_TOKEN }}
                     workflow_file_name: ofa_build_java.yml
-                    ref: ${{ env.SOURCE_BRANCH }}
+                    ref: ${{needs.init_env_job.outputs.SOURCE_BRANCH}}
                     inputs: '{
-                        "repository_branch": "${{ env.SOURCE_BRANCH }}",
+                        "repository_branch": "${{needs.init_env_job.outputs.SOURCE_BRANCH}}",
                         "ofa_environment": "${{ env.ENV_NAME }}",
-                        "perform_deployment": "${{ env.PERFORM_DEPLOYMENT }}",
-                        "image_prefix": "${{ env.IMAGE_PREFIX }}"
+                        "perform_deployment": "${{needs.init_env_job.outputs.PERFORM_DEPLOYMENT}}",
+                        "image_prefix": "${{needs.init_env_job.outputs.IMAGE_PREFIX}}"
                     }'
                     propagate_failure: true
                     trigger_workflow: true
