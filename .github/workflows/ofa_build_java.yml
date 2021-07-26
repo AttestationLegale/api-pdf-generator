@@ -192,7 +192,7 @@ jobs:
                     ./ecs-deploy \
                         -n ${{ secrets.SERVICE }} \
                         -c ${{ secrets.CLUSTER }} \
-                        -i ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ secrets.REGISTRY_NAME }}:latest \
+                        -i ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ secrets.REGISTRY_NAME }}:${{ env.IMAGE_PREFIX }}${{ env.APP_VERSION }} \
                         -r ${{ secrets.AWS_REGION }} \
                         -k ${{ secrets.AWS_ECS_SERVICE_DEPLOYER_ACCESS_KEY_ID }} \
                         -s ${{ secrets.AWS_ECS_SERVICE_DEPLOYER_SECRET_ACCESS_KEY }} \
