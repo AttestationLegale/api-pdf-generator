@@ -111,6 +111,10 @@
 
     <repositories>
         <repository>
+            <id>maven-central</id>
+            <url>https://repo.maven.apache.org/maven2/</url>
+        </repository>
+        <repository>
             <id>spring-milestones</id>
             <name>Spring Milestones</name>
             <url>http://repo.spring.io/milestone</url>
@@ -119,21 +123,8 @@
             </snapshots>
         </repository>
         <repository>
-            <id>jcentral</id>
-            <name>bintray</name>
-            <url>http://jcenter.bintray.com</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <repository>
             <id>itext</id>
             <url>https://repo.itextsupport.com/releases/</url>
-        </repository>
-        <repository>
-            <id>jcenter-snapshots</id>
-            <name>jcenter</name>
-            <url>http://oss.jfrog.org/artifactory/oss-snapshot-local/</url>
         </repository>
         <repository>
             <id>public-releases</id>
