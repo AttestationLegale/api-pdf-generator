@@ -103,31 +103,32 @@ jobs:
           IMAGE_PREFIX: ${{ env.IMAGE_PREFIX }}
           PERFORM_DEPLOYMENT: ${{ env.PERFORM_DEPLOYMENT }}
 
-    on_push_dev_test_job:
-        needs: init_env_job
-        runs-on: ubuntu-latest
-        name: "Test branch"
-        timeout-minutes: 5
-        steps:
-            # Provides useful common env vars (like repository name)
-            -   name: "Init common env vars"
-                uses: FranzDiebold/github-env-vars-action@v2
+    # TODO: re-activate once 'pokeintegration' is the new default int env
+    # on_push_dev_test_job:
+    #     needs: init_env_job
+    #     runs-on: ubuntu-latest
+    #     name: "Test branch"
+    #     timeout-minutes: 5
+    #     steps:
+    #         # Provides useful common env vars (like repository name)
+    #         -   name: "Init common env vars"
+    #             uses: FranzDiebold/github-env-vars-action@v2
 
-            -   name: "Trigger tests"
-                uses: convictional/trigger-workflow-and-wait@v1.4.0
-                with:
-                    owner: ${{ env.CI_REPOSITORY_OWNER }}
-                    repo: ${{ env.CI_REPOSITORY_NAME }}
-                    github_token: ${{ secrets.ACTIONS_ACCESS_TOKEN }}
-                    workflow_file_name: ofa_test_java.yml
-                    ref: ${{needs.init_env_job.outputs.SOURCE_BRANCH}}
-                    inputs: '{
-                        "repository_branch": "${{needs.init_env_job.outputs.SOURCE_BRANCH}}",
-                        "ofa_environment": "${{ env.ENV_NAME }}"
-                    }'
-                    propagate_failure: true
-                    trigger_workflow: true
-                    wait_workflow: false
+    #         -   name: "Trigger tests"
+    #             uses: convictional/trigger-workflow-and-wait@v1.4.0
+    #             with:
+    #                 owner: ${{ env.CI_REPOSITORY_OWNER }}
+    #                 repo: ${{ env.CI_REPOSITORY_NAME }}
+    #                 github_token: ${{ secrets.ACTIONS_ACCESS_TOKEN }}
+    #                 workflow_file_name: ofa_test_java.yml
+    #                 ref: ${{needs.init_env_job.outputs.SOURCE_BRANCH}}
+    #                 inputs: '{
+    #                     "repository_branch": "${{needs.init_env_job.outputs.SOURCE_BRANCH}}",
+    #                     "ofa_environment": "${{ env.ENV_NAME }}"
+    #                 }'
+    #                 propagate_failure: true
+    #                 trigger_workflow: true
+    #                 wait_workflow: false
 
     on_push_dev_deploy_pokeintegration_job:
         needs: init_env_job
