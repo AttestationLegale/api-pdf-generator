@@ -444,7 +444,32 @@
                     <environmentVariables>
                         <PROJECT_VERSION>${project.version}</PROJECT_VERSION>
                     </environmentVariables>
+                    <skipTests>${skipUTs}</skipTests>
+                    <excludes>
+                        <exclude>**/*CucumberTest.java</exclude>
+                        <exclude>**/*IntTest.java</exclude>
+                    </excludes>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <configuration>
+                    <skipTests>${skipTests}</skipTests>
+                    <skipITs>${skipITs}</skipITs>
+                    <includes>
+                        <include>**/*CucumberTest.java</include>
+                        <include>**/*IntTest.java</include>
+                    </includes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
