@@ -30,10 +30,11 @@ on:
                 required: false
                 # No prefix
                 default: ""
-    # Continuous delivery activated for pokeintegration
-    push:
-        branches:
-            - dev
+    # Continuous delivery
+    # Disabled while pokeint used for PROD (14/09/2021)
+    # push:
+    #     branches:
+    #         - dev
 
 env:
     SOURCE_BRANCH: "dev"
