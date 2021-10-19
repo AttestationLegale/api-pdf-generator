@@ -1,0 +1,160 @@
+############################################################
+#
+#   WARNING: This repository has a specific CI/CD pipeline
+#   due to its OpenSource status
+#
+############################################################
+
+############################################################
+# Proxy workflow that orchestrate platform specific actions
+############################################################
+
+# Controls when the action will run. Workflow runs when manually triggered using the UI
+# or API.
+name: "Auto deploy dev to pokeintegration"
+
+on:
+    workflow_dispatch:
+        # Inputs the workflow accepts.
+        inputs:
+            source_branch:
+                description: "Source branch to deploy to pokeintegration:"
+                required: true
+                default: "dev"
+            perform_deployment:
+                description: "Perform deployment (dry-run = false):"
+                required: false
+                default: "true"
+            image_prefix:
+                description: "Tag an image with a prefix (ex: 'RC-' = 'RC-X.Y.Z'):"
+                required: false
+                # No prefix
+                default: ""
+    # Continuous delivery
+    # Disabled while pokeint used for PROD (14/09/2021)
+    # push:
+    #     branches:
+    #         - dev
+
+env:
+    SOURCE_BRANCH: "dev"
+    IMAGE_PREFIX: ${{ github.event.inputs.image_prefix }}
+    # Tests + build image with(out) updating AWS task definition
+    PERFORM_DEPLOYMENT: "true"
+    ENV_NAME: "pokeintegration"
+
+jobs:
+    # This pre-job allows to save minutes (and by so, money) in case of duplicated runs
+    pre_job:
+        continue-on-error: true
+        runs-on: ubuntu-latest
+        name: "Cancel previous branch jobs"
+        timeout-minutes: 5
+        steps:
+            -   name: "Cancel duplicate runs"
+                id: skip_check
+                uses: fkirc/skip-duplicate-actions@master
+                with:
+                    cancel_others: true
+                    concurrent_skipping: "always"
+                    github_token: ${{ secrets.ACTIONS_ACCESS_TOKEN  }}
+
+    # Defines runtime variables depending on context
+    init_env_job:
+        runs-on: ubuntu-latest
+        name: "Init env from context"
+        timeout-minutes: 5
+        steps:
+            -   name: "Init env"
+                id: init_env
+                run: |
+                    # Use user's input 'source_branch' if given
+                    if [[ -n "${{ github.event.inputs.source_branch }}" ]]; then
+                        echo "Using source_branch=${{ github.event.inputs.source_branch }} given in input"
+                        echo "SOURCE_BRANCH=$(echo ${{ github.event.inputs.source_branch }})" >> $GITHUB_ENV
+                    else
+                        echo "Wil use default SOURCE_BRANCH=${{ env.SOURCE_BRANCH }}"
+                    fi
+
+                    # Use user's input 'image_prefix' if given
+                    if [[ -n "${{ github.event.inputs.image_prefix }}" ]]; then
+                        echo "Using image_prefix=${{ github.event.inputs.image_prefix }} given in input"
+                        echo "IMAGE_PREFIX=$(echo ${{ github.event.inputs.image_prefix }})" >> $GITHUB_ENV
+                    else
+                        echo "Wil use default IMAGE_PREFIX=${{ env.IMAGE_PREFIX }}"
+                    fi
+
+                    # Use user's input 'perform_deployment' if given
+                    if [[ -n "${{ github.event.inputs.perform_deployment }}" ]]; then
+                        echo "Using perform_deployment=${{ github.event.inputs.perform_deployment }} given in input"
+                        echo "PERFORM_DEPLOYMENT=$(echo ${{ github.event.inputs.perform_deployment }})" >> $GITHUB_ENV
+                    else
+                        echo "Wil use default perform_deployment=${{ env.PERFORM_DEPLOYMENT }}"
+                    fi
+                shell: bash
+
+            -   name: "Debug"
+                run: |
+                    echo "Will use SOURCE_BRANCH=${{ env.SOURCE_BRANCH }}"
+                    echo "Will use IMAGE_PREFIX=${{ env.IMAGE_PREFIX }}"
+                    echo "Will use PERFORM_DEPLOYMENT=${{ env.PERFORM_DEPLOYMENT }}"
+                shell: bash
+        outputs:
+          SOURCE_BRANCH: ${{ env.SOURCE_BRANCH }}
+          IMAGE_PREFIX: ${{ env.IMAGE_PREFIX }}
+          PERFORM_DEPLOYMENT: ${{ env.PERFORM_DEPLOYMENT }}
+
+    # TODO: re-activate once 'pokeintegration' is the new default int env
+    # on_push_dev_test_job:
+    #     needs: init_env_job
+    #     runs-on: ubuntu-latest
+    #     name: "Test branch"
+    #     timeout-minutes: 5
+    #     steps:
+    #         # Provides useful common env vars (like repository name)
+    #         -   name: "Init common env vars"
+    #             uses: FranzDiebold/github-env-vars-action@v2
+
+    #         -   name: "Trigger tests"
+    #             uses: convictional/trigger-workflow-and-wait@v1.4.0
+    #             with:
+    #                 owner: ${{ env.CI_REPOSITORY_OWNER }}
+    #                 repo: ${{ env.CI_REPOSITORY_NAME }}
+    #                 github_token: ${{ secrets.ACTIONS_ACCESS_TOKEN }}
+    #                 workflow_file_name: ofa_test_java.yml
+    #                 ref: ${{needs.init_env_job.outputs.SOURCE_BRANCH}}
+    #                 inputs: '{
+    #                     "repository_branch": "${{needs.init_env_job.outputs.SOURCE_BRANCH}}",
+    #                     "ofa_environment": "${{ env.ENV_NAME }}"
+    #                 }'
+    #                 propagate_failure: true
+    #                 trigger_workflow: true
+    #                 wait_workflow: false
+
+    on_push_dev_deploy_pokeintegration_job:
+        needs: init_env_job
+        runs-on: ubuntu-latest
+        name: "Deploy branch to pokeintegration"
+        timeout-minutes: 5
+        steps:
+            # Provides useful common env vars (like repository name)
+            -   name: "Init common env vars"
+                uses: FranzDiebold/github-env-vars-action@v2
+
+            -   name: "Trigger deployment"
+                uses: convictional/trigger-workflow-and-wait@v1.4.0
+                with:
+                    owner: ${{ env.CI_REPOSITORY_OWNER }}
+                    repo: ${{ env.CI_REPOSITORY_NAME }}
+                    github_token: ${{ secrets.ACTIONS_ACCESS_TOKEN }}
+                    workflow_file_name: ofa_build_java.yml
+                    ref: ${{needs.init_env_job.outputs.SOURCE_BRANCH}}
+                    inputs: '{
+                        "repository_branch": "${{needs.init_env_job.outputs.SOURCE_BRANCH}}",
+                        "ofa_environment": "${{ env.ENV_NAME }}",
+                        "perform_deployment": "${{needs.init_env_job.outputs.PERFORM_DEPLOYMENT}}"
+                    }'
+                    propagate_failure: true
+                    trigger_workflow: true
+                    wait_workflow: false
+
