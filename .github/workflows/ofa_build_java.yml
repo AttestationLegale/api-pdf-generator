@@ -157,13 +157,15 @@ jobs:
                   file: Dockerfile
                   build-args: |
                       APP_HOME=./
+                      DD_SERVICE=${{ secrets.REGISTRY_NAME }}
+                      DD_VERSION=${{ env.APP_VERSION }}
                       MVN_PROFILE=${{ secrets.MVN_PROFILE }}
                   platforms: linux/amd64
                   # Requires full tag to push to AWS
                   tags: |
                       ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ secrets.REGISTRY_NAME }}:${{ env.APP_VERSION }}
                       ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ secrets.REGISTRY_NAME }}:${{ env.IMAGE_PREFIX }}${{ env.APP_VERSION }}
-                      ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ env.REGISTRY_NAME }}:${{ env.TERRAFORM_IDENTIFIER }}
+                      ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ secrets.REGISTRY_NAME }}:${{ secrets.TERRAFORM_IDENTIFIER }}
                       ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ secrets.REGISTRY_NAME }}:latest
                       ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ secrets.REGISTRY_NAME }}:github-${{ env.CI_SHA_SHORT }}
                   cache-from: type=local,src=/tmp/.buildx-cache
