@@ -7,18 +7,12 @@
 
 ############################################################
 # Agnostic workflow (usually triggered by others)
-# Runs Java 8 applications tests for any branch/env
-#
-# IMPORTANT: could be moved to a "composite" action, but
-# ACT (testing tool) does not support it yet
-# and we want to keep the possibility of local testing
-# Should be supported starting from act v0.2.22+
+# Runs Java applications tests for any branch/env
 ############################################################
-
 
 # Controls when the action will run. Workflow runs when manually triggered using the UI
 # or API.
-name: "GENERIC test service"
+name: "GENERIC - Ttest service"
 
 on:
     workflow_dispatch:
@@ -29,9 +23,9 @@ on:
                 required: true
                 default: "dev"
             ofa_environment:
-                description: "Defines the env configuration (integration, staging):"
+                description: "Defines the env configuration (pokeintegration, staging):"
                 required: true
-                default: "integration"
+                default: "pokeintegration"
 
 env:
     # Application configuration
@@ -48,13 +42,13 @@ jobs:
         name: "Cancel previous branch jobs"
         timeout-minutes: 5
         steps:
-            -   name: "Cancel duplicate runs"
-                id: skip_check
-                uses: fkirc/skip-duplicate-actions@master
-                with:
-                    cancel_others: true
-                    concurrent_skipping: "always"
-                    github_token: ${{ secrets.ACTIONS_ACCESS_TOKEN  }}
+            - name: "Cancel duplicate runs"
+              id: skip_check
+              uses: fkirc/skip-duplicate-actions@master
+              with:
+                  cancel_others: true
+                  concurrent_skipping: "always"
+                  github_token: ${{ secrets.ACTIONS_ACCESS_TOKEN  }}
 
     ofa_test_job:
         environment: ${{ github.event.inputs.ofa_environment }}
@@ -63,69 +57,69 @@ jobs:
         timeout-minutes: 15
         steps:
             # To use this repository's private action, you must check out the repository
-            -   name: "Checkout"
-                id: checkout
-                uses: actions/checkout@v2
-                with:
-                    ref: ${{ env.REPO_BRANCH }}
-                    token: ${{ secrets.ACTIONS_ACCESS_TOKEN  }}
+            - name: "Checkout"
+              id: checkout
+              uses: actions/checkout@v2
+              with:
+                  ref: ${{ env.REPO_BRANCH }}
+                  token: ${{ secrets.ACTIONS_ACCESS_TOKEN  }}
 
             # Provides useful common env vars (like repository name)
-            -   name: "Init common env vars"
-                uses: FranzDiebold/github-env-vars-action@v2
+            - name: "Init common env vars"
+              uses: FranzDiebold/github-env-vars-action@v2
 
-            -   name: "Configure AWS credentials"
-                id: aws_creds
-                uses: aws-actions/configure-aws-credentials@v1
-                with:
-                    aws-access-key-id: ${{ secrets.AWS_ECS_SERVICE_DEPLOYER_ACCESS_KEY_ID }}
-                    aws-secret-access-key: ${{ secrets.AWS_ECS_SERVICE_DEPLOYER_SECRET_ACCESS_KEY }}
-                    aws-region: ${{ secrets.AWS_REGION }}
+            - name: "Configure AWS credentials"
+              id: aws_creds
+              uses: aws-actions/configure-aws-credentials@v1
+              with:
+                  aws-access-key-id: ${{ secrets.AWS_ECS_SERVICE_DEPLOYER_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_ECS_SERVICE_DEPLOYER_SECRET_ACCESS_KEY }}
+                  aws-region: ${{ secrets.AWS_REGION }}
 
-            -   name: "Login to Amazon ECR"
-                id: login_ecr
-                uses: aws-actions/amazon-ecr-login@v1
+            - name: "Login to Amazon ECR"
+              id: login_ecr
+              uses: aws-actions/amazon-ecr-login@v1
 
-            -   name: "Switch to application JDK"
-                id: switch_to_application_jdk
-                uses: actions/setup-java@v1
-                with:
-                    java-version: "${{ env.APP_JDK_VERSION }}"
-                    architecture: x64
+            - name: "Switch to application JDK"
+              id: switch_to_application_jdk
+              uses: actions/setup-java@v1
+              with:
+                  java-version: "${{ env.APP_JDK_VERSION }}"
+                  architecture: x64
 
-            -   name: "Cache local Maven repository"
-                id: cache_maven
-                uses: actions/cache@v2
-                with:
-                    path: ~/.m2/repository
-                    key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-                    restore-keys: |
-                        ${{ runner.os }}-maven-
+            - name: "Cache local Maven repository"
+              id: cache_maven
+              uses: actions/cache@v2
+              with:
+                  path: ~/.m2/repository
+                  key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+                  restore-keys: |
+                      ${{ runner.os }}-maven-
 
-            -   name: "Application test"
-                id: application_tests
-                run: |
-                    ./mvnw --batch-mode clean test
+            - name: "Application test"
+              id: application_tests
+              run: |
+                  ./mvnw --batch-mode clean test
 
-            -   name: "Jacoco report"
-                id: jacoco
-                run: ./mvnw --batch-mode clean jacoco:prepare-agent verify -Dcucumber.options="--plugin progress" jacoco:report
+            - name: "Jacoco report"
+              id: jacoco
+              run: ./mvnw --batch-mode clean jacoco:prepare-agent verify -Dcucumber.options="--plugin progress" jacoco:report
 
-            -   name: Set up JDK 11
-                id: switch_to_sonar_jdk
-                uses: actions/setup-java@v1
-                with:
-                    java-version: "11"
-                    architecture: x64
+            - name: Set up JDK 11
+              id: switch_to_sonar_jdk
+              uses: actions/setup-java@v1
+              with:
+                  java-version: "11"
+                  architecture: x64
 
-            -   name: Build and analyze
-                run: ./mvnw --batch-mode sonar:sonar
-                env:
-                    # Needed to get some information about the pull request, if any
-                    GITHUB_TOKEN: ${{ secrets.ACTIONS_ACCESS_TOKEN }}
-                    # SonarCloud access token should be generated from https://sonarcloud.io/account/security/
-                    SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+            - name: Build and analyze
+              run: ./mvnw --batch-mode sonar:sonar
+              env:
+                  # Needed to get some information about the pull request, if any
+                  GITHUB_TOKEN: ${{ secrets.ACTIONS_ACCESS_TOKEN }}
+                  # SonarCloud access token should be generated from https://sonarcloud.io/account/security/
+                  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-            -   name: Logout of Amazon ECR
-                if: always()
-                run: docker logout ${{ steps.login_ecr.outputs.registry }}
+            - name: Logout of Amazon ECR
+              if: always()
+              run: docker logout ${{ steps.login_ecr.outputs.registry }}

@@ -1,0 +1,77 @@
+name: "Init wrapper env"
+description: "All wrappers have same interface contract that can be overidden by user's inputs. This action either take user input or given defaults values for the wrapper calling this script"
+
+inputs:
+  source_branch:
+    description: "Default source branch to deploy:"
+    required: true
+    default: ""
+  perform_build:
+    description: "Default publish a new ECR image value:"
+    required: true
+    default: "false"
+  image_prefix:
+    description: "Default target image prefix on ECR (ex: 'RC-' = 'RC-X.Y.Z'):"
+    required: false
+    default: ""
+  perform_deployment:
+    description: "Default perform ECS deployment value (dry-run = false):"
+    required: true
+    default: "false"
+
+outputs:
+  source_branch:
+    description: "Source branch to deploy:"
+    value: ${{ steps.init_wrapper_env.outputs.source_branch }}
+  perform_build:
+    description: "Publish a new ECR image value:"
+    value: ${{ steps.init_wrapper_env.outputs.perform_build }}
+  image_prefix:
+    description: "Target image prefix on ECR (ex: 'RC-' = 'RC-X.Y.Z'):"
+    value: ${{ steps.init_wrapper_env.outputs.image_prefix }}
+  perform_deployment:
+    description: "Perform ECS deployment value (dry-run = false):"
+    value: ${{ steps.init_wrapper_env.outputs.perform_deployment }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Init env"
+      id: init_wrapper_env
+      run: |
+        # Use user's input 'source_branch'
+        if [[ -n "${{ github.event.inputs.source_branch }}" ]]; then
+            echo "Using source_branch=${{ github.event.inputs.source_branch }} given in input"
+            echo "::set-output name=source_branch::${{ github.event.inputs.source_branch }}"
+        else
+            echo "Using default value source_branch=${{ inputs.source_branch }}"
+            echo "::set-output name=source_branch::${{ inputs.source_branch }}"
+        fi
+
+        # Use user's input 'image_prefix' if given
+        if [[ -n "${{ github.event.inputs.image_prefix }}" ]]; then
+            echo "Using image_prefix=${{ github.event.inputs.image_prefix }} given in input"
+            echo "::set-output name=image_prefix::${{ github.event.inputs.image_prefix }}"
+        else
+            echo "Using default value image_prefix=${{ inputs.image_prefix }}"
+            echo "::set-output name=image_prefix::${{ inputs.image_prefix }}"
+        fi
+
+        # Use user's input 'perform_build' if given
+        if [[ -n "${{ github.event.inputs.perform_build }}" ]]; then
+            echo "Using perform_build=${{ github.event.inputs.perform_build }} given in input"
+            echo "::set-output name=perform_build::${{ github.event.inputs.perform_build }}"
+        else
+            echo "Using default value perform_build=${{ inputs.perform_build }}"
+            echo "::set-output name=perform_build::${{ inputs.perform_build }}"
+        fi
+
+        # Use user's input 'perform_deployment' if given
+        if [[ -n "${{ github.event.inputs.perform_deployment }}" ]]; then
+            echo "Using perform_deployment=${{ github.event.inputs.perform_deployment }} given in input"
+            echo "::set-output name=perform_deployment::${{ github.event.inputs.perform_deployment }}"
+        else
+            echo "Using default value perform_deployment=${{ inputs.perform_deployment }}"
+            echo "::set-output name=perform_deployment::${{ inputs.perform_deployment }}"
+        fi
+      shell: bash

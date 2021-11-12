@@ -1,5 +1,8 @@
 # This file avoids to send unecessary files to docker and has consequent performance impacts
 .git
+.github
 src/docs
 mvnw.cmd
-.travis.yml
+target/**
+*.secrets
+*.secret

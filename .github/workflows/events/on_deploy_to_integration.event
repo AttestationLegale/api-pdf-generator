@@ -1,6 +1,10 @@
 {
   "action": "workflow_dispatch",
   "inputs": {
-      "perform_deployment": "false"
+      "repository_branch": "dev",
+      "ofa_environment": "pokeintegration",
+      "perform_build": "false",
+      "perform_deployment": "false",
+      "image_prefix": "LOCAL-"
   }
 }
