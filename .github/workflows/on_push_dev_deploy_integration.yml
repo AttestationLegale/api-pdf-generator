@@ -38,12 +38,12 @@ on:
             - dev
 
 env:
-    SOURCE_BRANCH: "dev"
-    IMAGE_PREFIX: ${{ github.event.inputs.image_prefix }}
-    # Tests + build image with(out) updating AWS task definition
-    PERFORM_DEPLOYMENT: "true"
-    # Keeping integration cause we currently cannot remove environments in github...
     ENV_NAME: "integration"
+    # Defaults if no inputs to override those values
+    SOURCE_BRANCH_DEFAULT: dev
+    IMAGE_PREFIX_DEFAULT: "INT-"
+    PERFORM_BUILD_DEFAULT: "true"
+    PERFORM_DEPLOYMENT_DEFAULT: "true"
 
 jobs:
     # This pre-job allows to save minutes (and by so, money) in case of duplicated runs

@@ -38,11 +38,12 @@ on:
     #         - master
 
 env:
-    SOURCE_BRANCH: "master"
-    IMAGE_PREFIX: "RELEASE-"
-    # Tests + build image with(out) updating AWS task definition
-    PERFORM_DEPLOYMENT: "false"
     ENV_NAME: "production"
+    # Defaults if no inputs to override those values
+    SOURCE_BRANCH_DEFAULT: ${{ github.event.inputs.source_branch }}
+    IMAGE_PREFIX_DEFAULT: "RELEASE-"
+    PERFORM_BUILD_DEFAULT: "false"
+    PERFORM_DEPLOYMENT_DEFAULT: "false"
 
 jobs:
     # This pre-job allows to save minutes (and by so, money) in case of duplicated runs

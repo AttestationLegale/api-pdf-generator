@@ -37,10 +37,12 @@ on:
             - master
 
 env:
-    SOURCE_BRANCH: "master"
-    IMAGE_PREFIX: "RELEASE-"
-    PERFORM_DEPLOYMENT: "true"
     ENV_NAME: "demo"
+    # Defaults if no inputs to override those values
+    SOURCE_BRANCH_DEFAULT: master
+    IMAGE_PREFIX_DEFAULT: "RELEASE-"
+    PERFORM_BUILD_DEFAULT: "false" # false because should use already built production container
+    PERFORM_DEPLOYMENT_DEFAULT: "true"
 
 jobs:
     # This pre-job allows to save minutes (and by so, money) in case of duplicated runs
