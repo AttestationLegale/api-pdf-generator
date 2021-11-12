@@ -23,9 +23,9 @@ on:
                 required: true
                 default: "dev"
             ofa_environment:
-                description: "Defines the env configuration (pokeintegration, staging):"
+                description: "Defines the env configuration (integration, staging):"
                 required: true
-                default: "pokeintegration"
+                default: "integration"
 
 env:
     # Application configuration

@@ -23,9 +23,9 @@ on:
                 required: true
                 default: "dev"
             ofa_environment:
-                description: "Defines the env configuration (pokeintegration, staging, demo, production):"
+                description: "Defines the env configuration (integration, staging, demo, production):"
                 required: true
-                default: "pokeintegration"
+                default: "integration"
             perform_build:
                 description: "Publish a new ECR image:"
                 required: true
