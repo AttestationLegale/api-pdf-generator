@@ -11,7 +11,9 @@
 
 name: "GENERIC - Test service"
 
-on: ["pull_request"]
+on:
+    pull_request:
+        types: [opened, synchronize, reopened, ready_for_review]
 
 env:
     OFA_ENV: "integration"
@@ -23,6 +25,7 @@ env:
 jobs:
     # This pre-job allows to save minutes (and by so, money) in case of duplicated runs
     pre_job:
+        if: github.event.pull_request.draft == false
         environment: ${{ env.OFA_ENV }}
         continue-on-error: true
         runs-on: ubuntu-latest
@@ -38,6 +41,7 @@ jobs:
                   github_token: ${{ secrets.ACTIONS_ACCESS_TOKEN  }}
 
     ofa_test_job:
+        if: github.event.pull_request.draft == false
         environment: ${{ env.OFA_ENV }}
         runs-on: ubuntu-latest
         name: "PR Application quality"
