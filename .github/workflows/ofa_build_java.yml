@@ -204,7 +204,7 @@ jobs:
             - name: "Set current date as env variable"
               id: current_date
               if: ${{ env.PERFORM_DEPLOY == 'true' }}
-              run: echo "NOW=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
+              run: echo "NOW=$(TZ='Europe/Paris' date +'%Y-%m-%d @ %H:%M:%S (Paris)')" >> $GITHUB_ENV
 
             - name: "Create deployment badge"
               uses: schneegans/dynamic-badges-action@v1.0.0
