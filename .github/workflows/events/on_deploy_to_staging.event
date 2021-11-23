@@ -1,7 +1,0 @@
-{
-  "action": "workflow_dispatch",
-  "inputs": {
-      "source_branch": "stg",
-      "dry_run": "true"
-  }
-}

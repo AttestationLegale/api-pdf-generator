@@ -9,11 +9,11 @@
 # Proxy workflow that orchestrate platform specific actions
 ############################################################
 
-# Controls when the action will run. Workflow runs when manually triggered using the UI
-# or API.
-name: "Auto run PR checks"
+name: "GENERIC - Test service"
 
-on: ['pull_request']
+on:
+    pull_request:
+        types: [opened, synchronize, reopened, ready_for_review]
 
 env:
     OFA_ENV: "integration"
@@ -25,90 +25,92 @@ env:
 jobs:
     # This pre-job allows to save minutes (and by so, money) in case of duplicated runs
     pre_job:
+        if: github.event.pull_request.draft == false
         environment: ${{ env.OFA_ENV }}
         continue-on-error: true
         runs-on: ubuntu-latest
         name: "Cancel previous branch jobs"
         timeout-minutes: 5
         steps:
-            -   name: "Cancel duplicate runs"
-                id: skip_check
-                uses: fkirc/skip-duplicate-actions@master
-                with:
-                    cancel_others: true
-                    concurrent_skipping: "always"
-                    github_token: ${{ secrets.ACTIONS_ACCESS_TOKEN  }}
+            - name: "Cancel duplicate runs"
+              id: skip_check
+              uses: fkirc/skip-duplicate-actions@master
+              with:
+                  cancel_others: true
+                  concurrent_skipping: "always"
+                  github_token: ${{ secrets.ACTIONS_ACCESS_TOKEN  }}
 
     ofa_test_job:
+        if: github.event.pull_request.draft == false
         environment: ${{ env.OFA_ENV }}
         runs-on: ubuntu-latest
         name: "PR Application quality"
         timeout-minutes: 15
         steps:
             # To use this repository's private action, you must check out the repository
-            -   name: "Checkout"
-                id: checkout
-                uses: actions/checkout@v2
-                with:
-                    ref: ${{ github.event.pull_request.head.sha }}
-                    token: ${{ secrets.ACTIONS_ACCESS_TOKEN  }}
+            - name: "Checkout"
+              id: checkout
+              uses: actions/checkout@v2
+              with:
+                  ref: ${{ github.event.pull_request.head.sha }}
+                  token: ${{ secrets.ACTIONS_ACCESS_TOKEN  }}
 
             # Provides useful common env vars (like repository name)
-            -   name: "Init common env vars"
-                uses: FranzDiebold/github-env-vars-action@v2
+            - name: "Init common env vars"
+              uses: FranzDiebold/github-env-vars-action@v2.3.0
 
-            -   name: "Configure AWS credentials"
-                id: aws_creds
-                uses: aws-actions/configure-aws-credentials@v1
-                with:
-                    aws-access-key-id: ${{ secrets.AWS_ECS_SERVICE_DEPLOYER_ACCESS_KEY_ID }}
-                    aws-secret-access-key: ${{ secrets.AWS_ECS_SERVICE_DEPLOYER_SECRET_ACCESS_KEY }}
-                    aws-region: ${{ secrets.AWS_REGION }}
+            - name: "Configure AWS credentials"
+              id: aws_creds
+              uses: aws-actions/configure-aws-credentials@v1
+              with:
+                  aws-access-key-id: ${{ secrets.AWS_ECS_SERVICE_DEPLOYER_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_ECS_SERVICE_DEPLOYER_SECRET_ACCESS_KEY }}
+                  aws-region: ${{ secrets.AWS_REGION }}
 
-            -   name: "Login to Amazon ECR"
-                id: login_ecr
-                uses: aws-actions/amazon-ecr-login@v1
+            - name: "Login to Amazon ECR"
+              id: login_ecr
+              uses: aws-actions/amazon-ecr-login@v1
 
-            -   name: "Switch to application JDK"
-                id: switch_to_application_jdk
-                uses: actions/setup-java@v1
-                with:
-                    java-version: "${{ env.APP_JDK_VERSION }}"
-                    architecture: x64
+            - name: "Switch to application JDK"
+              id: switch_to_application_jdk
+              uses: actions/setup-java@v1
+              with:
+                  java-version: "${{ env.APP_JDK_VERSION }}"
+                  architecture: x64
 
-            -   name: "Cache local Maven repository"
-                id: cache_maven
-                uses: actions/cache@v2
-                with:
-                    path: ~/.m2/repository
-                    key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-                    restore-keys: |
-                        ${{ runner.os }}-maven-
+            - name: "Cache local Maven repository"
+              id: cache_maven
+              uses: actions/cache@v2
+              with:
+                  path: ~/.m2/repository
+                  key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+                  restore-keys: |
+                      ${{ runner.os }}-maven-
 
-            -   name: "Application test"
-                id: application_tests
-                run: |
-                    ./mvnw --batch-mode clean test
+            - name: "Application test"
+              id: application_tests
+              run: |
+                  ./mvnw --batch-mode clean test
 
-            -   name: "Jacoco report"
-                id: jacoco
-                run: ./mvnw --batch-mode clean jacoco:prepare-agent verify -Dcucumber.options="--plugin progress" jacoco:report
+            - name: "Jacoco report"
+              id: jacoco
+              run: ./mvnw --batch-mode clean jacoco:prepare-agent verify -Dcucumber.options="--plugin progress" jacoco:report
 
-            -   name: Set up JDK 11
-                id: switch_to_sonar_jdk
-                uses: actions/setup-java@v1
-                with:
-                    java-version: "11"
-                    architecture: x64
+            - name: Set up JDK 11
+              id: switch_to_sonar_jdk
+              uses: actions/setup-java@v1
+              with:
+                  java-version: "11"
+                  architecture: x64
 
-            -   name: Build and analyze
-                run: ./mvnw --batch-mode sonar:sonar
-                env:
-                    # Needed to get some information about the pull request, if any
-                    GITHUB_TOKEN: ${{ secrets.ACTIONS_ACCESS_TOKEN }}
-                    # SonarCloud access token should be generated from https://sonarcloud.io/account/security/
-                    SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+            - name: Build and analyze
+              run: ./mvnw --batch-mode sonar:sonar
+              env:
+                  # Needed to get some information about the pull request, if any
+                  GITHUB_TOKEN: ${{ secrets.ACTIONS_ACCESS_TOKEN }}
+                  # SonarCloud access token should be generated from https://sonarcloud.io/account/security/
+                  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-            -   name: Logout of Amazon ECR
-                if: always()
-                run: docker logout ${{ steps.login_ecr.outputs.registry }}
+            - name: Logout of Amazon ECR
+              if: always()
+              run: docker logout ${{ steps.login_ecr.outputs.registry }}

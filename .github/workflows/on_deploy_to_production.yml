@@ -10,20 +10,22 @@
 # @see https://github.com/AttestationLegale/ofa_platform-resources
 ############################################################
 
-# Controls when the action will run. Workflow runs when manually triggered using the UI
-# or API.
-name: "Manual deploy to production"
+name: "PROD - Deploy service"
 
 on:
     workflow_dispatch:
         # Inputs the workflow accepts.
         inputs:
             source_branch:
-                description: "Source branch to deploy to PRODUCTION:"
+                description: "Source branch/tag/SHA to deploy to PRODUCTION:"
                 required: true
                 default: "master"
+            perform_build:
+                description: "Publish a new ECR image:"
+                required: true
+                default: "true"
             perform_deployment:
-                description: "Perform deployment (dry-run = false):"
+                description: "Perform ECS deployment (dry-run = false):"
                 required: true
                 default: "false"
             image_prefix:
@@ -36,11 +38,12 @@ on:
     #         - master
 
 env:
-    SOURCE_BRANCH: "master"
-    IMAGE_PREFIX: "RELEASE-"
-    # Tests + build image with(out) updating AWS task definition
-    PERFORM_DEPLOYMENT: "false"
     ENV_NAME: "production"
+    # Defaults if no inputs to override those values
+    SOURCE_BRANCH_DEFAULT: ${{ github.event.inputs.source_branch }}
+    IMAGE_PREFIX_DEFAULT: "RELEASE-"
+    PERFORM_BUILD_DEFAULT: "false"
+    PERFORM_DEPLOYMENT_DEFAULT: "false"
 
 jobs:
     # This pre-job allows to save minutes (and by so, money) in case of duplicated runs
@@ -64,44 +67,40 @@ jobs:
         name: "Init env from context"
         timeout-minutes: 5
         steps:
-            -   name: "Init env"
-                id: init_env
-                run: |
-                    # Use user's input 'source_branch' if given
-                    if [[ -n "${{ github.event.inputs.source_branch }}" ]]; then
-                        echo "Using source_branch=${{ github.event.inputs.source_branch }} given in input"
-                        echo "SOURCE_BRANCH=$(echo ${{ github.event.inputs.source_branch }})" >> $GITHUB_ENV
-                    else
-                        echo "Wil use default SOURCE_BRANCH=${{ env.SOURCE_BRANCH }}"
-                    fi
+            # Provides useful common env vars (like repository name)
+            -   name: "Init common env vars"
+                uses: FranzDiebold/github-env-vars-action@v2.3.0
 
-                    # Use user's input 'image_prefix' if given
-                    if [[ -n "${{ github.event.inputs.image_prefix }}" ]]; then
-                        echo "Using image_prefix=${{ github.event.inputs.image_prefix }} given in input"
-                        echo "IMAGE_PREFIX=$(echo ${{ github.event.inputs.image_prefix }})" >> $GITHUB_ENV
-                    else
-                        echo "Wil use default IMAGE_PREFIX=${{ env.IMAGE_PREFIX }}"
-                    fi
+            # To use this repository's private action, you must check out the repository
+            -   name: "Checkout"
+                id: checkout
+                uses: actions/checkout@v2
+                with:
+                    ref: ${{ env.CI_REF }}
+                    token: ${{ secrets.ACTIONS_ACCESS_TOKEN  }}
 
-                    # Use user's input 'perform_deployment' if given
-                    if [[ -n "${{ github.event.inputs.perform_deployment }}" ]]; then
-                        echo "Using perform_deployment=${{ github.event.inputs.perform_deployment }} given in input"
-                        echo "PERFORM_DEPLOYMENT=$(echo ${{ github.event.inputs.perform_deployment }})" >> $GITHUB_ENV
-                    else
-                        echo "Wil use default perform_deployment=${{ env.PERFORM_DEPLOYMENT }}"
-                    fi
-                shell: bash
+            # Defines runtime variables depending on context
+            -   name: "Init job env from inputs"
+                id: init_wrapper_env
+                uses: ./.github/actions/wrapper-init-env
+                with:
+                    source_branch: "${{ env.SOURCE_BRANCH_DEFAULT }}"
+                    perform_build: "${{ env.PERFORM_BUILD_DEFAULT }}"
+                    image_prefix: "${{ env.IMAGE_PREFIX_DEFAULT }}"
+                    perform_deployment: "${{ env.PERFORM_DEPLOYMENT_DEFAULT }}"
 
-            -   name: "Debug"
-                run: |
-                    echo "Will use SOURCE_BRANCH=${{ env.SOURCE_BRANCH }}"
-                    echo "Will use IMAGE_PREFIX=${{ env.IMAGE_PREFIX }}"
-                    echo "Will use PERFORM_DEPLOYMENT=${{ env.PERFORM_DEPLOYMENT }}"
-                shell: bash
+            - name: "Deployment settings"
+              run: |
+                echo "Will use source_branch=${{ steps.init_wrapper_env.outputs.source_branch }}"
+                echo "Will use perform_build=${{ steps.init_wrapper_env.outputs.perform_build }}"
+                echo "Will use image_prefix=${{ steps.init_wrapper_env.outputs.image_prefix }}"
+                echo "Will use perform_deployment=${{ steps.init_wrapper_env.outputs.perform_deployment }}"
+              shell: bash
         outputs:
-          SOURCE_BRANCH: ${{ env.SOURCE_BRANCH }}
-          IMAGE_PREFIX: ${{ env.IMAGE_PREFIX }}
-          PERFORM_DEPLOYMENT: ${{ env.PERFORM_DEPLOYMENT }}
+          SOURCE_BRANCH: ${{ steps.init_wrapper_env.outputs.source_branch }}
+          IMAGE_PREFIX: ${{ steps.init_wrapper_env.outputs.image_prefix }}
+          PERFORM_BUILD: ${{ steps.init_wrapper_env.outputs.perform_build }}
+          PERFORM_DEPLOYMENT: ${{ steps.init_wrapper_env.outputs.perform_deployment }}
 
     on_deploy_to_production_test_workflow:
         needs: init_env_job
@@ -111,10 +110,10 @@ jobs:
         steps:
             # Provides useful common env vars (like repository name)
             -   name: "Init common env vars"
-                uses: FranzDiebold/github-env-vars-action@v2
+                uses: FranzDiebold/github-env-vars-action@v2.3.0
 
             -   name: "Trigger tests of production branch"
-                uses: convictional/trigger-workflow-and-wait@v1.4.0
+                uses: convictional/trigger-workflow-and-wait@v1.5.0
                 with:
                     owner: ${{ env.CI_REPOSITORY_OWNER }}
                     repo: ${{ env.CI_REPOSITORY_NAME }}
@@ -139,10 +138,10 @@ jobs:
         steps:
             # Provides useful common env vars (like repository name)
             -   name: "Init common env vars"
-                uses: FranzDiebold/github-env-vars-action@v2
+                uses: FranzDiebold/github-env-vars-action@v2.3.0
 
             -   name: "Trigger deployment to production"
-                uses: convictional/trigger-workflow-and-wait@v1.4.0
+                uses: convictional/trigger-workflow-and-wait@v1.5.0
                 with:
                     owner: ${{ env.CI_REPOSITORY_OWNER }}
                     repo: ${{ env.CI_REPOSITORY_NAME }}
@@ -152,6 +151,7 @@ jobs:
                     inputs: '{
                         "repository_branch": "${{needs.init_env_job.outputs.SOURCE_BRANCH}}",
                         "ofa_environment": "${{ env.ENV_NAME }}",
+                        "perform_build": "${{needs.init_env_job.outputs.PERFORM_BUILD}}",
                         "perform_deployment": "${{needs.init_env_job.outputs.PERFORM_DEPLOYMENT}}",
                         "image_prefix": "${{needs.init_env_job.outputs.IMAGE_PREFIX}}"
                     }'
