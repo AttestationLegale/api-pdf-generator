@@ -10,8 +10,6 @@
 # Runs Java applications build and deploy for any branch/env
 ############################################################
 
-# Controls when the action will run. Workflow runs when manually triggered using the UI
-# or API.
 name: "GENERIC - Deploy service"
 
 on:
@@ -177,6 +175,8 @@ jobs:
             #   # https://github.com/docker/build-push-action/issues/252
             #   # https://github.com/moby/buildkit/issues/1896
             - name: "Move cache"
+              id: move_cache_after_push_ecr
+              if: ${{ env.PERFORM_BUILD == 'true' }}
               run: |
                   rm -rf /tmp/.buildx-cache
                   mv /tmp/.buildx-cache-new /tmp/.buildx-cache
@@ -203,12 +203,12 @@ jobs:
 
             - name: "Set current date as env variable"
               id: current_date
-              if: ${{ env.PERFORM_DEPLOY == 'true' }}
+              if: ${{ success() && env.PERFORM_DEPLOY == 'true' }}
               run: echo "NOW=$(TZ='Europe/Paris' date +'%Y-%m-%d @ %H:%M:%S (Paris)')" >> $GITHUB_ENV
 
             - name: "Create deployment badge"
               uses: schneegans/dynamic-badges-action@v1.0.0
-              if: ${{ env.PERFORM_DEPLOY == 'true' }}
+              if: ${{ success() && env.PERFORM_DEPLOY == 'true' }}
               # Not failing workflow for a badge
               continue-on-error: true
               with:
