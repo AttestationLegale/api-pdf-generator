@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.stringtemplate.v4.ST;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.Map;
 
 @Service
@@ -47,11 +46,7 @@ public class PdfService {
         MediaDeviceDescription mediaDeviceDescription = new MediaDeviceDescription(MediaType.PRINT);
         properties.setMediaDeviceDescription(mediaDeviceDescription);
 
-        try {
-            HtmlConverter.convertToPdf(html, baos, properties);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("An error occured during pdf generation : " + e.getMessage());
-        }
+        HtmlConverter.convertToPdf(html, baos, properties);
 
         LOGGER.debug("Time to generate PDF = " + (System.currentTimeMillis() - start));
 
