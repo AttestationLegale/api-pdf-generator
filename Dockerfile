@@ -12,7 +12,7 @@ ADD . .
 # Please provide secrets: MAVEN_OFA_USERNAME, MAVEN_OFA_PASSWORD
 RUN mkdir -p /shared/ \
     && chmod -R 544 /shared \
-    && ./mvnw package -P${MVN_PROFILE} -DskipTests=true -Dmaven.javadoc.skip=true -B -V \
+    && ./mvnw package -P${MVN_PROFILE} -DskipTests=true -Dmaven.javadoc.skip=true -B -U -V \
     && echo "DD_VERSION=$(./mvnw org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate \
     -Dexpression=project.version -q -DforceStdout)" >> /shared/app.env \
     && echo "DD_SERVICE=$(./mvnw org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate \
