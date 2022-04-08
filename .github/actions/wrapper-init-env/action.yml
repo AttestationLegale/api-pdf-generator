@@ -18,6 +18,10 @@ inputs:
     description: "Default perform ECS deployment value (dry-run = false):"
     required: true
     default: "false"
+  perform_tests:
+    description: "Default perform tests (dry-run = false):"
+    required: true
+    default: "false"
 
 outputs:
   source_branch:
@@ -32,6 +36,9 @@ outputs:
   perform_deployment:
     description: "Perform ECS deployment value (dry-run = false):"
     value: ${{ steps.init_wrapper_env.outputs.perform_deployment }}
+  perform_tests:
+    description: "Default perform tests (dry-run = false):"
+    value: ${{ steps.init_wrapper_env.outputs.perform_tests }}
 
 runs:
   using: "composite"
@@ -73,5 +80,14 @@ runs:
         else
             echo "Using default value perform_deployment=${{ inputs.perform_deployment }}"
             echo "::set-output name=perform_deployment::${{ inputs.perform_deployment }}"
+        fi
+
+        # Use user's input 'perform_tests' if given
+        if [[ -n "${{ github.event.inputs.perform_tests }}" ]]; then
+            echo "Using perform_tests=${{ github.event.inputs.perform_tests }} given in input"
+            echo "::set-output name=perform_tests::${{ github.event.inputs.perform_tests }}"
+        else
+            echo "Using default value perform_tests=${{ inputs.perform_tests }}"
+            echo "::set-output name=perform_tests::${{ inputs.perform_tests }}"
         fi
       shell: bash

@@ -1,0 +1,206 @@
+name: "Build Java"
+description: "This actions publishes Java docker images on ECR"
+branding:
+    icon: "cloud"
+    color: "orange"
+
+inputs:
+    token:
+        description: "Github Access token (PAT)"
+        required: true
+        default: ${{ github.token }}
+    registry_name:
+        description: "Registry name"
+        required: true
+    mvn_profile:
+        description: "Maven profile"
+        required: true
+        default: "prod"
+    ecr_aws_region:
+        description: "AWS region of service ECR"
+        required: true
+        default: "eu-central-1"
+    ecr_aws_access_key_id:
+        description: "AWS access key ID to service ECR"
+        required: true
+    ecr_aws_secret_access_key:
+        description: "AWS secret access key to service ECR"
+        required: true
+    image_prefix:
+        description: "ECR Image prefix:"
+        required: true
+        default: "INT-"
+    image_tag:
+        description: "ECR Image tag (default will be version):"
+        required: false
+    terraform_identifier:
+        description: "infra tag"
+        required: true
+        default: "SNAPSHOT"
+    perform_deployment:
+        description: "Perform deployment"
+        required: true
+        default: "false"
+    service:
+        description: "Service name"
+        required: true
+    cluster:
+        description: "Cluster name"
+        required: true
+    gist_badge_token:
+        description: "Gist badge token"
+        required: false
+    gist_badge_id:
+        description: "Gist badge id"
+        required: false
+    gist_badge_filename:
+        description: "Gist badge filename"
+        required: false
+
+runs:
+    using: "composite"
+    steps:
+        # Provides useful common env vars (like repository name)
+        - name: "Init common env vars"
+          uses: FranzDiebold/github-env-vars-action@v2.3.0
+
+        - name: "Init application runtime env vars"
+          id: init_env
+          run: |
+              echo "This step might take some time depending on what is in cache... please be patient"
+
+              # Extract project version (ignoring <parent> bloc)
+              # Unix method preferred over mvn command, because mvn would download dependencies ($$: ~2 minutes)
+              export VERSION=$(
+                awk '
+                  /<dependenc/{exit}
+                  /<parent>/{parent++};
+                  /<version>/{
+                    if (parent == 1) {
+                      sub(/.*<version>/, "");
+                      sub(/<.*/, "");
+                      parent_version = $0;
+                    } else {
+                      sub(/.*<version>/, "");
+                      sub(/<.*/, "");
+                      version = $0;
+                      exit
+                    }
+                  }
+                  /<\/parent>/{parent--};
+                  END {
+                    print (version == "") ? parent_version : version
+                  }' pom.xml
+                )
+              echo "APP_VERSION=$(echo ${VERSION})" >> $GITHUB_ENV
+              echo "Exported APP_VERSION:[${VERSION}]"
+
+          shell: bash
+
+        # Needed to access ECR during build
+        - name: "Configure AWS credentials"
+          id: aws_creds_dev_deployer
+          uses: aws-actions/configure-aws-credentials@v1
+          with:
+              aws-access-key-id: ${{ inputs.ecr_aws_access_key_id }}
+              aws-secret-access-key: ${{ inputs.ecr_aws_secret_access_key }}
+              aws-region: ${{ inputs.ecr_aws_region }}
+
+        - name: "Login to Amazon ECR"
+          id: login_ecr_dev_deployer
+          uses: aws-actions/amazon-ecr-login@v1
+
+        # Cache initialization
+        - name: "Set up Docker Buildx"
+          id: init_buildx
+          if: ${{ env.PERFORM_BUILD == 'true' }}
+          uses: docker/setup-buildx-action@v1
+          with:
+              driver-opts: image=moby/buildkit:master
+
+        - name: "Cache Docker layers"
+          id: cache_docker
+          if: ${{ env.PERFORM_BUILD == 'true' }}
+          uses: actions/cache@v2
+          with:
+              path: /tmp/.buildx-cache
+              key: ${{ runner.os }}-buildx-${{ github.sha }}
+              restore-keys: |
+                  ${{ runner.os }}-buildx-
+
+        - name: "Push to ECR"
+          id: docker_push
+          if: ${{ env.PERFORM_BUILD == 'true' }}
+          uses: docker/build-push-action@v2
+          with:
+              push: true
+              context: .
+              file: Dockerfile
+              build-args: |
+                  APP_HOME=./
+                  DD_SERVICE=${{ inputs.registry_name }}
+                  DD_VERSION=${{ env.APP_VERSION }}
+                  MVN_PROFILE=${{ inputs.mvn_profile }}
+              platforms: linux/amd64
+              # Requires full tag to push to AWS
+              tags: |
+                  ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ inputs.registry_name }}:${{ env.APP_VERSION }}
+                  ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ inputs.registry_name }}:${{ inputs.image_prefix }}${{ env.APP_VERSION }}
+                  ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ inputs.registry_name }}:${{ inputs.terraform_identifier }}
+                  ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ inputs.registry_name }}:latest
+                  ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ inputs.registry_name }}:github-${{ env.CI_SHA_SHORT }}
+              cache-from: type=local,src=/tmp/.buildx-cache
+              cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
+
+        #   # This ugly bit is necessary if you don't want your cache to grow forever
+        #   # till it hits GitHub's limit of 5GB.
+        #   # Temp fix
+        #   # https://github.com/docker/build-push-action/issues/252
+        #   # https://github.com/moby/buildkit/issues/1896
+        - name: "Move cache"
+          id: move_cache_after_push_ecr
+          if: ${{ env.PERFORM_BUILD == 'true' }}
+          run: |
+              rm -rf /tmp/.buildx-cache
+              mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+          shell: bash
+
+        - name: "Deploy to ECS"
+          id: aws_task_deployment
+          if: ${{ success() && inputs.perform_deployment == 'true' }}
+          run: |
+              curl https://raw.githubusercontent.com/AttestationLegale/ecs-deploy/master/ecs-deploy > ./ecs-deploy
+              chmod +x ecs-deploy
+              ./ecs-deploy \
+                  -n ${{ inputs.service }} \
+                  -c ${{ inputs.cluster }} \
+                  -i ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ inputs.registry_name }}:${{ inputs.image_prefix }}${{ env.APP_VERSION }} \
+                  -r ${{ inputs.ecr_aws_region }} \
+                  -k ${{ inputs.ecr_aws_access_key_id }} \
+                  -s ${{ inputs.ecr_aws_secret_access_key }} \
+                  -t 31 \
+                  --skip-deployments-check
+          shell: bash
+
+        - name: "Set current date as env variable"
+          id: current_date
+          if: ${{ success() && inputs.perform_deployment == 'true' }}
+          run: echo "NOW=$(TZ='Europe/Paris' date +'%Y-%m-%d @ %H:%M:%S (Paris)')" >> $GITHUB_ENV
+          shell: bash
+
+        - name: "Create deployment badge"
+          uses: schneegans/dynamic-badges-action@v1.0.0
+          if: ${{ success() && inputs.perform_deployment == 'true' }}
+          with:
+              auth: ${{ inputs.gist_badge_token }}
+              gistID: ${{ inputs.gist_badge_id }}
+              filename: ${{ inputs.gist_badge_filename }}
+              namedLogo: "amazon"
+              label: "${{ env.ENV_NAME }} - ref:[${{ env.CI_ACTION_REF_NAME }}] - ${{ env.NOW }}"
+              message: ${{ env.APP_VERSION }}
+              color: green
+
+        - name: Logout of Amazon ECR
+          if: always()
+          run: docker logout ${{ steps.login_ecr_dev_deployer.outputs.registry }}
+          shell: bash
