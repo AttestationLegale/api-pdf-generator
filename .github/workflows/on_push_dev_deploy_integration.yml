@@ -159,7 +159,7 @@ jobs:
 
             - name: "Tests"
               if: ${{ fromJSON(steps.test_init_wrapper_env.outputs.perform_tests ) }}
-              uses: ./.github/actions/java/test_java
+              uses: ./.github/actions/test_java
               with:
                   token: ${{ secrets.ACTIONS_ACCESS_TOKEN }}
                   ecr_aws_region: ${{ secrets.AWS_REGION }}
