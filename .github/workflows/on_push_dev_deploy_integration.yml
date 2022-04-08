@@ -35,19 +35,14 @@ on:
         branches:
             - dev/**
 
-# Note: those default values can be overriden at runtime (especially via delivery_configserver)
 env:
     ENV_NAME: "integration"
     SOURCE_BRANCH: ${{ github.event.inputs.source_branch }}
-    DELIVERY_CONFIG_REPO: ofa_delivery_configserver
     IMAGE_PREFIX: "INT-"
-    ECR_REGION: "eu-central-1"
     PERFORM_BUILD: "true"
     PERFORM_DEPLOYMENT: "true"
     DEPLOY_TAG: ""
     PERFORM_TESTS: "true"
-    TESTS_APP_STAGE_NAME: image_for_tests
-    TESTS_SONAR_STAGE_NAME: image_for_sonar
 
 jobs:
     # This pre-job allows to save minutes (and by so, money) in case of duplicated runs

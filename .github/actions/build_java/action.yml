@@ -178,7 +178,7 @@ runs:
                   -r ${{ inputs.ecr_aws_region }} \
                   -k ${{ inputs.ecr_aws_access_key_id }} \
                   -s ${{ inputs.ecr_aws_secret_access_key }} \
-                  -t 31 \
+                  -t 90 \
                   --skip-deployments-check
           shell: bash
 
