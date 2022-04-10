@@ -111,7 +111,7 @@ jobs:
                   ecr_aws_secret_access_key: ${{ secrets.AWS_ECS_SERVICE_DEPLOYER_SECRET_ACCESS_KEY }}
                   image_prefix: ${{ steps.init_wrapper_env.outputs.IMAGE_PREFIX }}
                   terraform_identifier: ${{ secrets.TERRAFORM_IDENTIFIER }}
-                  perform_build: "${{ steps.init_wrapper_env.outputs.perform_deployment }}"
+                  perform_build: "${{ steps.init_wrapper_env.outputs.perform_build }}"
                   perform_deployment: "${{ steps.init_wrapper_env.outputs.perform_deployment }}"
                   image_tag: ${{ inputs.deploy_tag }}
                   service: ${{ secrets.SERVICE }}
