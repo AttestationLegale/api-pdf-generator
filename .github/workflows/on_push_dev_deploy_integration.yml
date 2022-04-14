@@ -18,7 +18,7 @@ on:
                 description: "Build: new ECR image:"
                 required: false
                 default: "true"
-            build_image_prefix:
+            image_prefix:
                 description: "Build: image prefix (ex: 'RC-' = 'RC-X.Y.Z'):"
                 required: false
                 default: "INT-"
