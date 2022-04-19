@@ -40,7 +40,7 @@
         <commons-io.version>2.6</commons-io.version>
         <commons-lang.version>3.7</commons-lang.version>
         <elasticsearch.version>5.6.3</elasticsearch.version>
-        <guava.version>25.1-jre</guava.version>
+        <guava.version>29.0-jre</guava.version>
         <html2pdf.version>4.0.1</html2pdf.version>
         <jacoco-maven-plugin.version>0.8.6</jacoco-maven-plugin.version>
         <javassist.version>3.22.0-GA</javassist.version>
