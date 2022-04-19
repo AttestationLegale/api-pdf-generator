@@ -1,0 +1,90 @@
+name: "Build Java"
+description: "This actions publishes Java docker images on ECR"
+branding:
+    icon: "cloud"
+    color: "orange"
+
+inputs:
+    token:
+        description: "Github Access token (PAT)"
+        required: true
+        default: ${{ github.token }}
+    ecr_aws_region:
+        description: "AWS region of service ECR"
+        required: true
+        default: "eu-central-1"
+    ecr_aws_access_key_id:
+        description: "AWS access key ID to service ECR"
+        required: true
+    ecr_aws_secret_access_key:
+        description: "AWS secret access key to service ECR"
+        required: true
+    sonar_token:
+        description: "SonarCloud access token"
+        required: true
+
+runs:
+    using: "composite"
+    steps:
+            # Provides useful common env vars (like repository name)
+            - name: "Init common env vars"
+              uses: FranzDiebold/github-env-vars-action@v2.3.0
+
+            # Needed to access ECR during build
+            -   name: "Configure AWS credentials"
+                id: aws_creds_dev_deployer
+                uses: aws-actions/configure-aws-credentials@v1
+                with:
+                    aws-access-key-id: ${{ inputs.ecr_aws_access_key_id }}
+                    aws-secret-access-key: ${{ inputs.ecr_aws_secret_access_key }}
+                    aws-region: ${{ inputs.ecr_aws_region }}
+
+            -   name: "Login to Amazon ECR"
+                id: login_ecr_dev_deployer
+                uses: aws-actions/amazon-ecr-login@v1
+
+            - name: "Switch to application JDK"
+              id: switch_to_application_jdk
+              uses: actions/setup-java@v1
+              with:
+                  java-version: 8
+                  architecture: x64
+
+            - name: "Cache local Maven repository"
+              id: cache_maven
+              uses: actions/cache@v2
+              with:
+                  path: ~/.m2/repository
+                  key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+                  restore-keys: |
+                      ${{ runner.os }}-maven-
+
+            - name: "Application test"
+              id: application_tests
+              run: |
+                  ./mvnw --batch-mode clean test
+              shell: bash
+
+            - name: "Jacoco report"
+              id: jacoco
+              run: ./mvnw --batch-mode clean jacoco:prepare-agent verify -Dcucumber.options="--plugin progress" jacoco:report
+              shell: bash
+
+            - name: Set up JDK 11
+              id: switch_to_sonar_jdk
+              uses: actions/setup-java@v1
+              with:
+                  java-version: "11"
+                  architecture: x64
+
+            - name: Build and analyze
+              run: |
+                export GITHUB_TOKEN=${{ inputs.token }}
+                export SONAR_TOKEN=${{ inputs.sonar_token }}
+                ./mvnw --batch-mode sonar:sonar
+              shell: bash
+
+            - name: Logout of Amazon ECR
+              if: always()
+              run: docker logout ${{ steps.login_ecr.outputs.registry }}
+              shell: bash

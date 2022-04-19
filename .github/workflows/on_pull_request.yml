@@ -15,10 +15,6 @@ on:
     pull_request:
         types: [opened, synchronize, reopened, ready_for_review]
 
-env:
-    OFA_ENV: "integration"
-    APP_JDK_VERSION: 8
-
 # This duplicates codes from `ofa_test_java.yml`
 # Reason is that I am waiting for nektos/act 0.2.22 to be released
 # to move to composite actions
@@ -42,12 +38,11 @@ jobs:
 
     ofa_test_job:
         if: github.event.pull_request.draft == false
-        environment: ${{ env.OFA_ENV }}
+        environment: integration
         runs-on: ubuntu-latest
         name: "PR Application quality"
-        timeout-minutes: 15
+        timeout-minutes: 30
         steps:
-            # To use this repository's private action, you must check out the repository
             - name: "Checkout"
               id: checkout
               uses: actions/checkout@v2
@@ -55,62 +50,24 @@ jobs:
                   ref: ${{ github.event.pull_request.head.sha }}
                   token: ${{ secrets.ACTIONS_ACCESS_TOKEN  }}
 
-            # Provides useful common env vars (like repository name)
-            - name: "Init common env vars"
-              uses: FranzDiebold/github-env-vars-action@v2.3.0
-
-            - name: "Configure AWS credentials"
-              id: aws_creds
-              uses: aws-actions/configure-aws-credentials@v1
+            # Defines runtime variables depending on context
+            - name: "Init job env from inputs"
+              id: test_init_wrapper_env
+              uses: ./.github/actions/wrapper-init-env
               with:
-                  aws-access-key-id: ${{ secrets.AWS_ECS_SERVICE_DEPLOYER_ACCESS_KEY_ID }}
-                  aws-secret-access-key: ${{ secrets.AWS_ECS_SERVICE_DEPLOYER_SECRET_ACCESS_KEY }}
-                  aws-region: ${{ secrets.AWS_REGION }}
+                  perform_tests: "${{ env.PERFORM_TESTS }}"
 
-            - name: "Login to Amazon ECR"
-              id: login_ecr
-              uses: aws-actions/amazon-ecr-login@v1
-
-            - name: "Switch to application JDK"
-              id: switch_to_application_jdk
-              uses: actions/setup-java@v1
-              with:
-                  java-version: "${{ env.APP_JDK_VERSION }}"
-                  architecture: x64
-
-            - name: "Cache local Maven repository"
-              id: cache_maven
-              uses: actions/cache@v2
-              with:
-                  path: ~/.m2/repository
-                  key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-                  restore-keys: |
-                      ${{ runner.os }}-maven-
-
-            - name: "Application test"
-              id: application_tests
+            - name: "Tests settings"
               run: |
-                  ./mvnw --batch-mode clean test
+                  echo "Will use perform_tests=${{ steps.test_init_wrapper_env.outputs.perform_tests }}"
+              shell: bash
 
-            - name: "Jacoco report"
-              id: jacoco
-              run: ./mvnw --batch-mode clean jacoco:prepare-agent verify -Dcucumber.options="--plugin progress" jacoco:report
-
-            - name: Set up JDK 11
-              id: switch_to_sonar_jdk
-              uses: actions/setup-java@v1
+            - name: "Tests"
+              if: ${{ fromJSON(steps.test_init_wrapper_env.outputs.perform_tests ) }}
+              uses: ./.github/actions/test_java
               with:
-                  java-version: "11"
-                  architecture: x64
-
-            - name: Build and analyze
-              run: ./mvnw --batch-mode sonar:sonar
-              env:
-                  # Needed to get some information about the pull request, if any
-                  GITHUB_TOKEN: ${{ secrets.ACTIONS_ACCESS_TOKEN }}
-                  # SonarCloud access token should be generated from https://sonarcloud.io/account/security/
-                  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-            - name: Logout of Amazon ECR
-              if: always()
-              run: docker logout ${{ steps.login_ecr.outputs.registry }}
+                  token: ${{ secrets.ACTIONS_ACCESS_TOKEN }}
+                  ecr_aws_region: ${{ secrets.AWS_REGION }}
+                  ecr_aws_access_key_id: ${{ secrets.AWS_ECS_SERVICE_DEPLOYER_ACCESS_KEY_ID }}
+                  ecr_aws_secret_access_key: ${{ secrets.AWS_ECS_SERVICE_DEPLOYER_SECRET_ACCESS_KEY }}
+                  sonar_token: ${{ secrets.SONAR_TOKEN }}
