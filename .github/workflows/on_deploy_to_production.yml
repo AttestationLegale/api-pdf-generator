@@ -13,11 +13,11 @@ on:
             perform_tests:
                 description: "Tests: unit & sonar:"
                 required: false
-                default: "true"
+                default: "false"
             perform_build:
                 description: "Build: new ECR image:"
                 required: false
-                default: "false"
+                default: "true"
             image_prefix:
                 description: "Build: image prefix (ex: 'RC-' = 'RC-X.Y.Z'):"
                 required: false
@@ -30,15 +30,20 @@ on:
                 description: "Deploy: tag (empty = current app version)"
                 required: false
                 default: ""
+    # Continuous delivery activated for demo
+    # Ensures a rebuild of a PROD docker image at any push
+    push:
+        branches:
+            - master
 
 env:
     ENV_NAME: "production"
     SOURCE_BRANCH: ${{ github.event.inputs.source_branch }}
     IMAGE_PREFIX: "RELEASE-"
-    PERFORM_BUILD: "false"
-    PERFORM_DEPLOYMENT: "true"
+    PERFORM_BUILD: "true"
+    PERFORM_DEPLOYMENT: "false"
     DEPLOY_TAG: ""
-    PERFORM_TESTS: "true"
+    PERFORM_TESTS: "false"
 
 jobs:
     # This pre-job allows to save minutes (and by so, money) in case of duplicated runs

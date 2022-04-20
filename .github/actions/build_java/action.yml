@@ -176,14 +176,16 @@ runs:
               curl https://raw.githubusercontent.com/AttestationLegale/ecs-deploy/master/ecs-deploy > ./ecs-deploy
               chmod +x ecs-deploy
               ./ecs-deploy \
-                  -n ${{ inputs.service }} \
-                  -c ${{ inputs.cluster }} \
-                  -i ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ inputs.registry_name }}:${{ inputs.image_prefix }}${{ env.APP_VERSION }} \
-                  -r ${{ inputs.ecr_aws_region }} \
-                  -k ${{ inputs.ecr_aws_access_key_id }} \
-                  -s ${{ inputs.ecr_aws_secret_access_key }} \
-                  -t 90 \
-                  --skip-deployments-check
+                    --aws-access-key ${{ inputs.ecr_aws_access_key_id }} \
+                    --aws-secret-key ${{ inputs.ecr_aws_secret_access_key }} \
+                    --cluster ${{ inputs.cluster }} \
+                    --image ${{ steps.login_ecr_dev_deployer.outputs.registry }}/${{ inputs.registry_name }}:${{ inputs.image_prefix }}${{ env.APP_VERSION }} \
+                    --region ${{ inputs.ecr_aws_region }} \
+                    --service-name ${{ inputs.service }} \
+                    -t 90 \
+                    --skip-deployments-check \
+                    --use-latest-task-def \
+                    --verbose
           shell: bash
 
         - name: "Set current date as env variable"
