@@ -90,6 +90,7 @@ jobs:
                   perform_build: "${{ env.PERFORM_BUILD }}"
                   image_prefix: "${{ env.IMAGE_PREFIX }}"
                   perform_deployment: "${{ env.PERFORM_DEPLOYMENT }}"
+                  perform_tests: "${{ env.PERFORM_TESTS }}"
 
             - name: "Deployment settings"
               run: |
