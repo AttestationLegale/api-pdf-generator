@@ -171,7 +171,7 @@ runs:
 
         - name: "Deploy to ECS"
           id: aws_task_deployment
-          if: ${{ success() && inputs.perform_deployment == 'true' }}
+          if: ${{ always() && inputs.perform_deployment == 'true' }}
           run: |
               curl https://raw.githubusercontent.com/AttestationLegale/ecs-deploy/master/ecs-deploy > ./ecs-deploy
               chmod +x ecs-deploy
